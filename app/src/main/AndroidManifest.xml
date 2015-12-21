@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="fiware.smartparking" >
+
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.CHANGE_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+
+    <application
+        android:allowBackup="true"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:supportsRtl="true"
+        android:theme="@android:style/Theme.DeviceDefault">
+
+        <activity
+            android:name=".MainActivity"
+            android:label="@string/app_name"
+            android:screenOrientation="landscape"
+            android:theme="@style/AppTheme.NoActionBar">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <service
+            android:name="com.here.android.mpa.service.MapService"
+            android:exported="true"
+            android:label="HereMapService"
+            android:process="global.Here.Map.Service.v2" >
+            <intent-filter>
+                <action android:name="com.here.android.mpa.service.MapService" >
+                </action>
+            </intent-filter>
+        </service>
+
+        <meta-data
+            android:name="com.here.android.maps.appid"
+            android:value="7JvXovNHWGzyG2VBGeF2" />
+        <meta-data
+            android:name="com.here.android.maps.apptoken"
+            android:value="MdNjK1VnYHrzUFQZeykVbA" />
+        <meta-data
+            android:name="com.here.android.maps.license.key"
+            android:value="f5LbLcLgjQs8I+5pWZMphBqTClBIBZYUpmqFc5BoAUwTxD4SyIPuj5nkCrl8K26nZW5VzwZ8F2YvLHZWGbNmn4MIjRnDU/fd0w5AQb/IOF6yOYEUoHrDSURgj9juCS1NdiNmqF91YGENqdyBWBDA0FlmH3XCOYRfPyEPcoOLnPX9gcf4raYmPXmJeP7U58hU/fFv64vwK+RTUq/4F7hdK026yOhmI97iVBe+8bQBHIf0rvvox85+qHWhtbtb6c1lchoFX+gsZ8z4HOlE5ts3FIjG9zFaH1sRaL1/B7XLHAevxJc4EUvnlt4R7i5FjV0PScuvorGPOGAeYmm8IzVhfxYMDc+yC2kL4p2b3M2/eMFjLu7Bh3Px9a/NT99elKD1pu0vUdwSfYHRKloDnN8G2l5ALDaKCIsMQUZ6oAgRaAioto7Go4A4xOyxilkFiu1JkNpqnPVivtrRox7ywY4UZMXmovESAnQ7giOYO1IApP6tKYkxNP8jpTozXICjLvhKEOhfALMLIg1HHy9mPjirlUGCU+oIuY6vK4IhCvTnFNuhpC0i2+mdBD9T/gIsLfmhCHvEa5l4nyn+pT2Hq2yaV0mEsyz3mE19UAEX2T2ljSL3JGTCXXiLi08GjDl8vQlfh8ZrSTS/CiuGDU9hnTRMrZIjoyfi5IbeC1A27xOH4f8=" />
+
+    </application>
+
+</manifest>
