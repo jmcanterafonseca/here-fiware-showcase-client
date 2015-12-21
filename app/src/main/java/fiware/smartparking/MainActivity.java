@@ -46,6 +46,7 @@ import com.here.android.mpa.common.IconCategory;
 import com.here.android.mpa.common.Image;
 import com.here.android.mpa.common.OnEngineInitListener;
 import com.here.android.mpa.common.PositioningManager;
+import com.here.android.mpa.common.Version;
 import com.here.android.mpa.common.ViewObject;
 import com.here.android.mpa.common.ViewRect;
 import com.here.android.mpa.guidance.NavigationManager;
@@ -68,8 +69,9 @@ import com.here.android.mpa.search.Address;
 import com.here.android.mpa.search.ErrorCode;
 import com.here.android.mpa.search.GeocodeRequest;
 import com.here.android.mpa.search.ImageMedia;
+import com.here.android.mpa.search.Location;
 import com.here.android.mpa.search.ResultListener;
-import com.here.android.mpa.search.ReverseGeocodeRequest;
+import com.here.android.mpa.search.ReverseGeocodeRequest2;
 import com.here.android.mpa.search.TextSuggestionRequest;
 
 import java.io.IOException;
@@ -475,6 +477,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener,
             @Override
             public void onEngineInitializationCompleted(OnEngineInitListener.Error error) {
                 if (error == OnEngineInitListener.Error.NONE) {
+                    Log.d("FIWARE-HERE", "Version: " + Version.SDK_API_INT);
                     mapFragment.getMapGesture().addOnGestureListener(gestureListener);
 
                     // retrieve a reference of the map from the map fragment
@@ -793,13 +796,13 @@ public class MainActivity extends AppCompatActivity implements LocationListener,
 
                     if(data.size() > 0) {
                         if(data.get(0).type.equals("StreetParking")) {
-                            ReverseGeocodeRequest req = new ReverseGeocodeRequest(
+                            ReverseGeocodeRequest2 req = new ReverseGeocodeRequest2(
                                     new GeoCoordinate( data.get(0).location[0],data.get(0).location[1]));
-                            req.execute(new ResultListener<Address>() {
+                            req.execute(new ResultListener<Location>() {
                                 @Override
-                                public void onCompleted(Address address, ErrorCode errorCode) {
-                                    ParkingRenderer.announceParking(tts, address.getStreet());
-                                    showParkingData(address.getStreet());
+                                public void onCompleted(Location location, ErrorCode errorCode) {
+                                    ParkingRenderer.announceParking(tts, location.getAddress().getStreet());
+                                    showParkingData(location.getAddress().getStreet());
                                 }
                             });
                         }

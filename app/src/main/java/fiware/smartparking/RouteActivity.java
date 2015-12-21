@@ -5,6 +5,9 @@ import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.graphics.drawable.Drawable;
+import android.os.Handler;
+import android.os.Looper;
+import android.os.Message;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.text.Editable;
@@ -34,7 +37,7 @@ import com.here.android.mpa.search.Address;
 import com.here.android.mpa.search.ErrorCode;
 import com.here.android.mpa.search.GeocodeRequest;
 import com.here.android.mpa.search.ResultListener;
-import com.here.android.mpa.search.ReverseGeocodeRequest;
+import com.here.android.mpa.search.ReverseGeocodeRequest2;
 import com.here.android.mpa.search.TextSuggestionRequest;
 import com.here.android.mpa.search.Location;
 
@@ -349,12 +352,12 @@ public class RouteActivity implements LocationListener {
         locationProgress.dismiss();
 
         if(coords != null) {
-            ReverseGeocodeRequest req = new ReverseGeocodeRequest(coords);
-            req.execute(new ResultListener<Address>() {
+            ReverseGeocodeRequest2 req = new ReverseGeocodeRequest2(coords);
+            req.execute(new ResultListener<Location>() {
                 @Override
-                public void onCompleted(Address address, ErrorCode errorCode) {
-                    originCity.setText(address.getCity());
-                    origin.setText(address.getText());
+                public void onCompleted(Location location, ErrorCode errorCode) {
+                    originCity.setText(location.getAddress().getCity());
+                    origin.setText(location.getAddress().getText());
                     origin.setEnabled(true);
                 }
             });
@@ -423,14 +426,24 @@ public class RouteActivity implements LocationListener {
         }
     }
 
+    private Handler UIHandler = new Handler(Looper.getMainLooper()) {
+        public void handleMessage(Message inputMessage) {
+            if(inputMessage.what == -1) {
+                if(progress != null) {
+                  progress.dismiss();
+                }
+
+                Toast.makeText(Application.mainActivity.getApplicationContext(),
+                        "Error while geocoding location", Toast.LENGTH_SHORT).show();
+            }
+        }
+    };
+
     private void calculateRoute() {
         final GeoCoordinate originCoordinates = getCoordForCity(routeData.originCity);
         final GeoCoordinate destCoordinates = getCoordForCity(routeData.city);
 
         String originStr = routeData.origin;
-        if(originStr.indexOf(routeData.originCity) == -1) {
-            originStr += "," + routeData.originCity;
-        }
 
         GeocodeRequest req1 = new GeocodeRequest(originStr);
         req1.setSearchArea(originCoordinates, 10000);
@@ -455,13 +468,15 @@ public class RouteActivity implements LocationListener {
                                 doCalculateRoute(geoOrigin, geoDestination);
                             }
                             else {
-                                Alert.show(Application.mainActivity, "Error while Geocoding locations");
+                                Message msg = UIHandler.obtainMessage(-1);
+                                msg.sendToTarget();
                             }
                         }
                     });
                 }
                 else {
-                    Alert.show(Application.mainActivity, "Error while Geocoding locations");
+                    Message msg = UIHandler.obtainMessage(-1);
+                    msg.sendToTarget();
                 }
             }
         });
