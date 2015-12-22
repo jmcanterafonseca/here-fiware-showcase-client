@@ -66,15 +66,21 @@ public class RouteActivity implements LocationListener {
             "Valencia",
             "Barcelona",
             "Aveiro",
-            "Amsterdam"
+            "Amsterdam",
+            "Santander",
+            "Sevilla",
+            "Málaga"
     };
     private static double[][] CITY_COORDS = new double[][] {
             { 41.14946, -8.61031 },
             { 40.63018, -3.16446 },
-            { 39.46868,-0.37691 },
+            { 39.46868, -0.37691 },
             { 41.38561, 2.16873 },
             { 40.64123, -8.65391 },
-            { 52.3731, 4.89329 }
+            { 52.3731, 4.89329 },
+            { 43.4666, -3.79998},
+            { 38.80889, -7.03888},
+            { 36.71667, -4.41668}
     };
 
     private static Map<String, double[]> cityCoords = new HashMap<String, double[]>();
@@ -133,6 +139,12 @@ public class RouteActivity implements LocationListener {
         setupNextEventHandler();
         setupHeader(2);
         setAutoCompleteHandlerDestination();
+
+        // By default dest city equal to the origin city
+        if(city.getText().length() == 0) {
+            city.setText(routeData.originCity);
+            routeData.city = routeData.originCity;
+        }
     }
 
     private void goToParkingStep() {
@@ -272,9 +284,10 @@ public class RouteActivity implements LocationListener {
         city.setText(routeData.city);
         destination.setText(routeData.destination);
 
+        /*
         if (routeData.city.equals("")) {
             city.requestFocus();
-        }
+        } */
 
         checkNextButton(null);
     }
