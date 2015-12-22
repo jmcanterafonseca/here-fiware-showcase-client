@@ -207,6 +207,8 @@ public class RouteActivity implements LocationListener {
 
     private void setAutoCompleteHandlerOrigin() {
         origin = (AutoCompleteTextView)activity.findViewById(R.id.editText);
+        originCity = (AutoCompleteTextView)activity.findViewById(R.id.originCityInput);
+
         originAdapter = new ArrayAdapter<String>(activity,
                 android.R.layout.simple_dropdown_item_1line, optionList1);
         origin.setAdapter(originAdapter);
@@ -217,7 +219,6 @@ public class RouteActivity implements LocationListener {
 
         origin.setText(routeData.origin);
 
-        originCity = (AutoCompleteTextView)activity.findViewById(R.id.originCityInput);
         originCity.setCompoundDrawables(y, null, null, null);
         ArrayAdapter originCityAdapter = new ArrayAdapter<String>(activity,
                 android.R.layout.simple_dropdown_item_1line, cityList);
@@ -242,7 +243,7 @@ public class RouteActivity implements LocationListener {
             }
         });
 
-        checkNextButton();
+        checkNextButton(null);
     }
 
     private void setAutoCompleteHandlerDestination() {
@@ -275,7 +276,7 @@ public class RouteActivity implements LocationListener {
             city.requestFocus();
         }
 
-        checkNextButton();
+        checkNextButton(null);
     }
 
     public void back() {
@@ -482,13 +483,21 @@ public class RouteActivity implements LocationListener {
         });
     }
 
-    private void checkNextButton() {
+    private void checkNextButton(AutoCompleteTextView view) {
         if (currentStep.equals("Origin")) {
             if(origin.getText().length() > 0 && originCity.getText().length() > 0) {
                 nextButton.setEnabled(true);
             }
             else {
                 nextButton.setEnabled(false);
+            }
+
+            // If city changes then address is reset
+            if(originCity.getText().length() == 0 && origin.getText().length() > 0) {
+                origin.setText("");
+            }
+            if(view != null && view.getId() == R.id.originCityInput) {
+                origin.setText("");
             }
         }
         else if(currentStep.equals("Destination")) {
@@ -497,6 +506,13 @@ public class RouteActivity implements LocationListener {
             }
             else {
                 nextButton.setEnabled(false);
+            }
+
+            if(city.getText().length() == 0 && destination.getText().length() > 0) {
+                destination.setText("");
+            }
+            if(view != null && view.getId() == R.id.cityInput) {
+                destination.setText("");
             }
         }
     }
@@ -539,7 +555,7 @@ public class RouteActivity implements LocationListener {
         public void onTextChanged(CharSequence s, int start, int before, int count) {
             checkRemoveButton();
 
-            checkNextButton();
+            checkNextButton(view);
 
             String tag = (String)view.getTag();
             if(tag == null || tag.indexOf("Address") == -1) {
