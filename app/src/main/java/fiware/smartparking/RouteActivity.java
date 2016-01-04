@@ -34,10 +34,14 @@ import com.here.android.mpa.routing.RouteOptions;
 import com.here.android.mpa.routing.RoutePlan;
 import com.here.android.mpa.routing.RouteResult;
 import com.here.android.mpa.search.Address;
+import com.here.android.mpa.search.DiscoveryResult;
+import com.here.android.mpa.search.DiscoveryResultPage;
 import com.here.android.mpa.search.ErrorCode;
 import com.here.android.mpa.search.GeocodeRequest;
+import com.here.android.mpa.search.PlaceLink;
 import com.here.android.mpa.search.ResultListener;
 import com.here.android.mpa.search.ReverseGeocodeRequest2;
+import com.here.android.mpa.search.SearchRequest;
 import com.here.android.mpa.search.TextSuggestionRequest;
 import com.here.android.mpa.search.Location;
 
@@ -51,6 +55,8 @@ import java.util.Map;
  * Created by jmcf on 23/10/15.
  */
 public class RouteActivity implements LocationListener {
+    private static int GEOCODE_SEARCH_AREA = 6000;
+
     private ProgressDialog progress, locationProgress;
 
     private AutoCompleteTextView origin, destination, city, originCity;
@@ -453,44 +459,89 @@ public class RouteActivity implements LocationListener {
         }
     };
 
+    private void geoCodeLocation(String locationStr, GeoCoordinate center,
+                                 final ResultListener<GeoCoordinate> listener) {
+      if(locationStr.indexOf(",") == -1) {
+          // It seems to be a POI. issuing search request
+          searchLocation(locationStr, center, listener);
+      }
+      else {
+          getCoordinatesFor(locationStr, center, listener);
+      }
+    }
+
+    private void searchLocation(String locationStr, GeoCoordinate center,
+                                final ResultListener<GeoCoordinate> listener) {
+        SearchRequest sr = new SearchRequest(locationStr);
+        sr.setSearchCenter(center);
+        sr.setCollectionSize(1);
+        sr.execute(new ResultListener<DiscoveryResultPage>() {
+            @Override
+            public void onCompleted(DiscoveryResultPage data, ErrorCode errorCode) {
+                if (errorCode == ErrorCode.NONE) {
+                    List<DiscoveryResult> results = data.getItems();
+                    if (results.size() > 0) {
+                        DiscoveryResult result = results.get(0);
+                        if (result.getResultType() == DiscoveryResult.ResultType.PLACE) {
+                            PlaceLink placeLink = (PlaceLink) result;
+                            listener.onCompleted(placeLink.getPosition(), errorCode);
+                        }
+                    }
+                }
+                else {
+                    listener.onCompleted(null, errorCode);
+                }
+            }
+        });
+    }
+
+    private void getCoordinatesFor(String locationStr, GeoCoordinate center,
+                                   final ResultListener<GeoCoordinate> listener) {
+        GeocodeRequest req1 = new GeocodeRequest(locationStr);
+        req1.setSearchArea(center, GEOCODE_SEARCH_AREA);
+        req1.execute(new ResultListener<List<Location>>() {
+            public void onCompleted(List<Location> data, ErrorCode errorCode) {
+                if (errorCode == ErrorCode.NONE && data != null && data.size() > 0) {
+                    listener.onCompleted(data.get(0).getCoordinate(), errorCode);
+                } else {
+                    listener.onCompleted(null, errorCode);
+                }
+            }
+        });
+    }
+
+    private void notifyErrorToUI() {
+        Message msg = UIHandler.obtainMessage(-1);
+        msg.sendToTarget();
+    }
+
     private void calculateRoute() {
-        final GeoCoordinate originCoordinates = getCoordForCity(routeData.originCity);
+        GeoCoordinate originCoordinates = getCoordForCity(routeData.originCity);
         final GeoCoordinate destCoordinates = getCoordForCity(routeData.city);
 
         String originStr = routeData.origin;
 
-        GeocodeRequest req1 = new GeocodeRequest(originStr);
-        req1.setSearchArea(originCoordinates, 10000);
-        req1.execute(new ResultListener<List<Location>>() {
-            public void onCompleted(List<Location> data, ErrorCode error) {
-                if(error == ErrorCode.NONE && data != null && data.size() > 0) {
-                    final GeoCoordinate geoOrigin = data.get(0).getCoordinate();
-                    routeData.originCoordinates = geoOrigin;
-
+        geoCodeLocation(originStr, originCoordinates, new ResultListener<GeoCoordinate>() {
+            @Override
+            public void onCompleted(GeoCoordinate coords, ErrorCode errorCode) {
+                if (errorCode == ErrorCode.NONE) {
+                    routeData.originCoordinates = coords;
                     String destinationStr = routeData.destination;
-                    if(destinationStr.indexOf(routeData.city) == -1) {
-                        destinationStr += "," + routeData.city;
-                    }
-
-                    GeocodeRequest req2 = new GeocodeRequest(destinationStr);
-                    req2.setSearchArea(destCoordinates, 10000);
-                    req2.execute(new ResultListener<List<Location>>() {
-                        public void onCompleted(List<Location> data, ErrorCode error) {
-                            if(error == ErrorCode.NONE && data != null && data.size() > 0) {
-                                GeoCoordinate geoDestination = data.get(0).getCoordinate();
-                                routeData.destinationCoordinates = geoDestination;
-                                doCalculateRoute(geoOrigin, geoDestination);
+                    geoCodeLocation(destinationStr, destCoordinates, new ResultListener<GeoCoordinate>() {
+                        @Override
+                        public void onCompleted(GeoCoordinate geoCoordinate, ErrorCode errorCode) {
+                            if(errorCode == ErrorCode.NONE) {
+                                routeData.destinationCoordinates = geoCoordinate;
+                                doCalculateRoute(routeData.originCoordinates, routeData.destinationCoordinates);
                             }
                             else {
-                                Message msg = UIHandler.obtainMessage(-1);
-                                msg.sendToTarget();
+                                notifyErrorToUI();
                             }
                         }
                     });
                 }
                 else {
-                    Message msg = UIHandler.obtainMessage(-1);
-                    msg.sendToTarget();
+                    notifyErrorToUI();
                 }
             }
         });
