@@ -70,6 +70,11 @@ public class ParkingRenderer {
         GeoCoordinate coords = new GeoCoordinate(ent.location[0], ent.location[1]);
 
         String available =  ent.attributes.get("availableSpotNumber").toString();
+
+        if(available.equals("0")) {
+            return;
+        }
+
         String total = ent.attributes.get("totalSpotNumber").toString();
 
         List<GeoPolygon> polygons = (List<GeoPolygon>)ent.attributes.get("polygon");

@@ -78,7 +78,7 @@ public class CityDataRetriever extends AsyncTask<CityDataRequest, Integer, List<
 
                 JSONObject location;
                 try {
-                    location = obj.getJSONObject("center");
+                    location = obj.getJSONObject("centroid");
                 }
                 catch(JSONException jse) {
                     location = obj.getJSONObject("location");
@@ -119,16 +119,35 @@ public class CityDataRetriever extends AsyncTask<CityDataRequest, Integer, List<
             getStringJSONAttr("description", obj, "description", attrs);
 
             if(type.equals("StreetParking")) {
-                List<GeoPolygon> location = new ArrayList<GeoPolygon>();
+                boolean isArray = true;
+                JSONArray polygons = null;
 
-                JSONArray polygons = obj.getJSONArray("location").getJSONArray(0);
-                int total = polygons.length();
-                for(int j = 0; j < total; j++) {
-                    JSONArray polygon = polygons.getJSONArray(j);
+                List<GeoPolygon> location = new ArrayList<GeoPolygon>();
+                try {
+                    polygons = obj.getJSONArray("location").getJSONArray(0);
+                }
+                catch(JSONException jsoe) {
+                    isArray = false;
+                }
+                if(isArray == true) {
+                    int total = polygons.length();
+                    for (int j = 0; j < total; j++) {
+                        JSONArray polygon = polygons.getJSONArray(j);
+                        List<GeoCoordinate> geoPolygon = new ArrayList<GeoCoordinate>();
+                        for (int x = 0; x < polygon.length(); x++) {
+                            float lat = Float.parseFloat(polygon.getJSONArray(x).getString(0));
+                            float lon = Float.parseFloat(polygon.getJSONArray(x).getString(1));
+                            geoPolygon.add(new GeoCoordinate(lat, lon));
+                        }
+                        location.add(new GeoPolygon(geoPolygon));
+                    }
+                }
+                else {
+                    String[] polygonCoords = obj.getString("location").split(",");
                     List<GeoCoordinate> geoPolygon = new ArrayList<GeoCoordinate>();
-                    for(int x = 0; x < polygon.length(); x++) {
-                        float lat = Float.parseFloat(polygon.getJSONArray(x).getString(0));
-                        float lon = Float.parseFloat(polygon.getJSONArray(x).getString(1));
+                    for(int j = 0; j < polygonCoords.length; j+=2) {
+                        float lat = Float.parseFloat(polygonCoords[j]);
+                        float lon = Float.parseFloat(polygonCoords[j + 1]);
                         geoPolygon.add(new GeoCoordinate(lat, lon));
                     }
                     location.add(new GeoPolygon(geoPolygon));
