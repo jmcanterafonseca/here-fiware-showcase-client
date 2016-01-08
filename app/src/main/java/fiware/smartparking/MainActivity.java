@@ -10,6 +10,7 @@ import android.graphics.PointF;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.Message;
 import android.speech.tts.TextToSpeech;
 import android.speech.tts.UtteranceProgressListener;
 import android.support.v7.app.AppCompatActivity;
@@ -955,9 +956,32 @@ public class MainActivity extends AppCompatActivity implements LocationListener,
             // NOTE: this method is called in both cases when destination
             // is reached and when NavigationManager is stopped.
             Toast.makeText(getApplicationContext(),
-                                "Destination reached!", Toast.LENGTH_LONG).show();
+                    "Destination reached!", Toast.LENGTH_LONG).show();
 
             doTerminateSimulation();
+
+            doTransferRoute();
+        }
+
+        private void doTransferRoute() {
+            RouteTransfer transferTask = new RouteTransfer();
+            Handler handler = new Handler() {
+                @Override
+                public void handleMessage(Message msg) {
+                    int result = msg.getData().getInt(Application.TRANSFER_RESULT);
+                    String text = "";
+                    if(result == 0) {
+                        text = "Route transferred OK";
+                    }
+                    else {
+                        text = "Route transfer error";
+                    }
+                    Toast.makeText(getApplicationContext(), text, Toast.LENGTH_SHORT).show();
+                }
+            };
+
+            transferTask.setHandler(handler);
+            transferTask.execute(routeData);
         }
 
         @Override
@@ -966,16 +990,22 @@ public class MainActivity extends AppCompatActivity implements LocationListener,
     };
 
     private void showNavigationUI() {
-        ((RelativeLayout)findViewById(R.id.routePlanningLayout)).setVisibility(RelativeLayout.GONE);
+        findViewById(R.id.routePlanningLayout).setVisibility(RelativeLayout.GONE);
 
-        ((RelativeLayout)findViewById(R.id.nextRoadLayout)).setVisibility(RelativeLayout.VISIBLE);
-        ((RelativeLayout)findViewById(R.id.navigationLayout)).setVisibility(RelativeLayout.VISIBLE);
+        findViewById(R.id.nextRoadLayout).setVisibility(RelativeLayout.VISIBLE);
+        findViewById(R.id.navigationLayout).setVisibility(RelativeLayout.VISIBLE);
 
         LinearLayout.LayoutParams layoutParams1 = new LinearLayout.LayoutParams(
                 RelativeLayout.LayoutParams.MATCH_PARENT, 0, 0.82f);
 
         RelativeLayout mapLayout = (RelativeLayout)findViewById(R.id.mainMapLayout);
         mapLayout.setLayoutParams(layoutParams1);
+
+        RelativeLayout innerMapLayout = (RelativeLayout)findViewById(R.id.innerMapLayout);
+        LinearLayout.LayoutParams layoutParamsInner = new LinearLayout.LayoutParams(
+                 0, RelativeLayout.LayoutParams.MATCH_PARENT, 0.90f);
+        innerMapLayout.setLayoutParams(layoutParamsInner);
+        ((RelativeLayout)findViewById(R.id.oascDataLayout)).setVisibility(RelativeLayout.VISIBLE);
 
         popupMenu.getMenu().setGroupVisible(R.id.simulationGroup, true);
         popupMenu.getMenu().setGroupVisible(R.id.initialGroup, false);
@@ -996,6 +1026,12 @@ public class MainActivity extends AppCompatActivity implements LocationListener,
         RelativeLayout mapLayout = (RelativeLayout)findViewById(R.id.mainMapLayout);
         mapLayout.setLayoutParams(layoutParams1);
         mapLayout.requestLayout();
+
+        RelativeLayout innerMapLayout = (RelativeLayout)findViewById(R.id.innerMapLayout);
+        LinearLayout.LayoutParams layoutParamsInner = new LinearLayout.LayoutParams(
+                0, RelativeLayout.LayoutParams.MATCH_PARENT, 1.0f);
+        innerMapLayout.setLayoutParams(layoutParamsInner);
+        ((RelativeLayout)findViewById(R.id.oascDataLayout)).setVisibility(RelativeLayout.GONE);
 
         if(popupMenu != null) {
             popupMenu.getMenu().setGroupVisible(R.id.initialGroup, true);

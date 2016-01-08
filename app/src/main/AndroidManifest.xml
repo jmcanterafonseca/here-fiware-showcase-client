@@ -3,6 +3,7 @@
     package="fiware.smartparking" >
 
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.BLUETOOTH" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.CHANGE_NETWORK_STATE" />
@@ -40,13 +41,13 @@
 
         <meta-data
             android:name="com.here.android.maps.appid"
-            android:value="7JvXovNHWGzyG2VBGeF2" />
+            android:value="U3zMQKY4zIGOTKd6uor2" />
         <meta-data
             android:name="com.here.android.maps.apptoken"
-            android:value="MdNjK1VnYHrzUFQZeykVbA" />
+            android:value="OJ_1KZM3We8MsR0LfKRyCQ" />
         <meta-data
             android:name="com.here.android.maps.license.key"
-            android:value="f5LbLcLgjQs8I+5pWZMphBqTClBIBZYUpmqFc5BoAUwTxD4SyIPuj5nkCrl8K26nZW5VzwZ8F2YvLHZWGbNmn4MIjRnDU/fd0w5AQb/IOF6yOYEUoHrDSURgj9juCS1NdiNmqF91YGENqdyBWBDA0FlmH3XCOYRfPyEPcoOLnPX9gcf4raYmPXmJeP7U58hU/fFv64vwK+RTUq/4F7hdK026yOhmI97iVBe+8bQBHIf0rvvox85+qHWhtbtb6c1lchoFX+gsZ8z4HOlE5ts3FIjG9zFaH1sRaL1/B7XLHAevxJc4EUvnlt4R7i5FjV0PScuvorGPOGAeYmm8IzVhfxYMDc+yC2kL4p2b3M2/eMFjLu7Bh3Px9a/NT99elKD1pu0vUdwSfYHRKloDnN8G2l5ALDaKCIsMQUZ6oAgRaAioto7Go4A4xOyxilkFiu1JkNpqnPVivtrRox7ywY4UZMXmovESAnQ7giOYO1IApP6tKYkxNP8jpTozXICjLvhKEOhfALMLIg1HHy9mPjirlUGCU+oIuY6vK4IhCvTnFNuhpC0i2+mdBD9T/gIsLfmhCHvEa5l4nyn+pT2Hq2yaV0mEsyz3mE19UAEX2T2ljSL3JGTCXXiLi08GjDl8vQlfh8ZrSTS/CiuGDU9hnTRMrZIjoyfi5IbeC1A27xOH4f8=" />
+            android:value="MRYr8ymJpKiBlwK77DVCZvm4EOv5J93iRO1GjnBaRcCngq7vdvjKNa37DO6lcWjcytnEV8pYoaX9FL+DaBjmE3xcji9QrNT1SM8YuA2HISNQdnwEAMaUiK3w3GEaaJFtgmylZIXJhYlAX+DNZYPJmjXmf2JHKSiYbVz4bwgZM6a2Krsg+eUVsAkUnzDPQcX7z49lpvrRx6/hBZZS7jkh3dHl9BsaSiyjydNOEEkzCtm7GoqC1hEEpz5AxgyZAwdQ+U756lPYgeJjcbTQ/KpDdffEhq5IEjNvFE0ZnoD0mh8i5ZynsXvSoBeDHw8WsklUxd31e8JPenHKLCW0rWW/bmdK/jFsgDcjrbHjgKy+UIQNKM0fyxchVZAXXNl93mZ+hMRigou+pAK/EF1DOkQAkzF2MQ6U9UkkvcDMkAXSTYke38CVhMosatzvRcI3Etak1MFvQ43oQ1rPbnZNJylZ5cNgMJ5bYKH6LWmw1RhEUnrrTMGj+X6UMg4ruQujRTId4nGzbQ8IXRdYv3+wweY4hxJyPl8Yd1ErMxwZNVrDuokCbFHHXl2xH+jTgRMUuHefbGP9Os6ZztEmI1+4PzlqYX9p9HlK2ispR1M4K6eQMkFs0QNaIS8FAuKQQea9cm0H/NcZbbxAPlvldgIOtZX4LPeqRJ1RRUdryzrxaujyQM0=" />
 
     </application>
 

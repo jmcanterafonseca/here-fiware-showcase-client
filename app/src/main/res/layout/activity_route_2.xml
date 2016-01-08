@@ -91,6 +91,7 @@
                 android:layout_height="wrap_content"
                 android:text="Next"
                 android:id="@+id/nextButton1"
+                style="@style/btnStyleShakespeare"
                 android:layout_gravity="center_horizontal"
                 android:layout_marginLeft="200dp"
                 android:layout_marginRight="200dp"

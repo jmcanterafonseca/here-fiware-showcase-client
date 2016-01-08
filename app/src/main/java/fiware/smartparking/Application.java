@@ -19,4 +19,7 @@ public class Application {
     public static int PARKING_DISTANCE = 700;
 
     public static List<MapObject> mapObjects = new ArrayList<MapObject>();
+
+    public static String TAG = "FIWARE-HERE";
+    public static String TRANSFER_RESULT = "Transfer-Result";
 }

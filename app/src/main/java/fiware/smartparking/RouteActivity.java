@@ -135,6 +135,13 @@ public class RouteActivity implements LocationListener {
         setupNextEventHandler();
         setupHeader(1);
         setAutoCompleteHandlerOrigin();
+
+        if(routeData.originCity.length() > 0) {
+            originCity.setText(routeData.originCity);
+        }
+        if(routeData.origin.length() > 0) {
+            origin.setText(routeData.origin);
+        }
     }
 
     private void goToDestinationStep() {
@@ -478,9 +485,9 @@ public class RouteActivity implements LocationListener {
         sr.execute(new ResultListener<DiscoveryResultPage>() {
             @Override
             public void onCompleted(DiscoveryResultPage data, ErrorCode errorCode) {
-                if (errorCode == ErrorCode.NONE) {
+                if (errorCode == ErrorCode.NONE && data != null) {
                     List<DiscoveryResult> results = data.getItems();
-                    if (results.size() > 0) {
+                    if (results != null && results.size() > 0) {
                         DiscoveryResult result = results.get(0);
                         if (result.getResultType() == DiscoveryResult.ResultType.PLACE) {
                             PlaceLink placeLink = (PlaceLink) result;
