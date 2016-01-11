@@ -12,6 +12,9 @@ import android.util.Log;
 import com.here.android.mpa.common.GeoCoordinate;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.util.Arrays;
 import java.util.Set;
 import java.util.UUID;
 
@@ -69,7 +72,29 @@ public class RouteTransfer extends AsyncTask<RouteData, Void, Integer> {
             socket.connect();
             String coordStr = coords.getLatitude() + "," + coords.getLongitude();
             coordStr += ";" + dest;
-            socket.getOutputStream().write(coordStr.getBytes());
+            OutputStream output = socket.getOutputStream();
+            output.write(coordStr.getBytes());
+
+            Log.d(Application.TAG, "Route sent to paired device: " + coordStr);
+
+            output.flush();
+
+            byte[] buffer = new byte[16];
+            InputStream input = socket.getInputStream();
+            int bytesRead = input.read(buffer);
+            String data = new String(Arrays.copyOf(buffer, bytesRead));
+
+            if(data.equals("bye")) {
+                Log.d(Application.TAG, "ACK received. Closing");
+                try {
+                    input.close();
+                    output.close();
+                    socket.close();
+                }
+                catch(IOException ioe) {
+
+                }
+            }
 
             // Success
             return 0;

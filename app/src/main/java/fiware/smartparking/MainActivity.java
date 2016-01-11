@@ -867,19 +867,13 @@ public class MainActivity extends AppCompatActivity implements LocationListener,
             nextManouverDistance.setText(String.format("%d m",
                     navMan.getNextManeuverDistance()));
 
-            switch (nextManeuver.getTurn()) {
-                case HEAVY_LEFT:
-                case QUITE_LEFT:
-                case LIGHT_LEFT:
-                    turnNavigation.setImageResource(R.drawable.turnleft);
-                    break;
-
-                case HEAVY_RIGHT:
-                case QUITE_RIGHT:
-                case LIGHT_RIGHT:
-                    turnNavigation.setImageResource(R.drawable.turnright);
-                    break;
+            int id = getResources().getIdentifier(nextManeuver.getTurn().name().toLowerCase(),
+                    "drawable", getPackageName());
+            // Returns 0 if not found
+            if(id != 0) {
+                turnNavigation.setImageResource(id);
             }
+
         }
 
         handleSmartCity(loc);
@@ -1017,8 +1011,8 @@ public class MainActivity extends AppCompatActivity implements LocationListener,
         locationButton.setVisibility(RelativeLayout.VISIBLE);
         fiwareImage.setVisibility(RelativeLayout.GONE);
 
-        ((RelativeLayout)findViewById(R.id.nextRoadLayout)).setVisibility(RelativeLayout.GONE);
-        ((RelativeLayout)findViewById(R.id.navigationLayout)).setVisibility(RelativeLayout.GONE);
+        findViewById(R.id.nextRoadLayout).setVisibility(RelativeLayout.GONE);
+        findViewById(R.id.navigationLayout).setVisibility(RelativeLayout.GONE);
 
         LinearLayout.LayoutParams layoutParams1 = new LinearLayout.LayoutParams(
                 RelativeLayout.LayoutParams.MATCH_PARENT, 0, 1.0f);
