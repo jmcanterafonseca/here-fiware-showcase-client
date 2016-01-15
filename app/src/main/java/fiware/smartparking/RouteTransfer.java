@@ -41,7 +41,8 @@ public class RouteTransfer extends AsyncTask<RouteData, Void, Integer> {
 
     protected Integer doInBackground(RouteData... request) {
         RouteData data = request[0];
-        int result = transfer(data.destination, data.destinationCoordinates);
+        int result = transfer(data.parkingCoordinates, data.parkingAddress,
+                data.destinationCoordinates, data.destination);
 
         return new Integer(result);
     }
@@ -51,7 +52,8 @@ public class RouteTransfer extends AsyncTask<RouteData, Void, Integer> {
        sendMessage(result.intValue());
     }
 
-    private int transfer(String dest, GeoCoordinate coords) {
+    private int transfer(GeoCoordinate originCoords, String originName,
+                         GeoCoordinate destCoords,String destName) {
         BluetoothAdapter adapter = BluetoothAdapter.getDefaultAdapter();
         Set<BluetoothDevice> pairedDevices = adapter.getBondedDevices();
         if(pairedDevices.size() == 0) {
@@ -59,19 +61,25 @@ public class RouteTransfer extends AsyncTask<RouteData, Void, Integer> {
             return -1;
         }
 
+        BluetoothDevice device = null;
         for(BluetoothDevice bt : pairedDevices) {
             Log.d(Application.TAG, "Paired Device: " + bt.getName());
+            if(bt.getName().equals("Fiware-Here-Slave")) {
+                device = bt;
+            }
         }
 
-        BluetoothDevice device = (BluetoothDevice)pairedDevices.toArray()[0];
         Log.d(Application.TAG,"Paired device to connect to: " + device.getName());
 
         try {
             UUID uuid = UUID.fromString("29B966E5-FBAD-4A05-B40E-86205D77AF72");
             BluetoothSocket socket = device.createRfcommSocketToServiceRecord(uuid);
             socket.connect();
-            String coordStr = coords.getLatitude() + "," + coords.getLongitude();
-            coordStr += ";" + dest;
+            String coordStr = originCoords.getLatitude() + "," + originCoords.getLongitude();
+            coordStr += ";" + originName;
+            coordStr += ";" + destCoords.getLatitude() + "," + destCoords.getLongitude();
+            coordStr += ";" + destName;
+
             OutputStream output = socket.getOutputStream();
             output.write(coordStr.getBytes());
 
@@ -92,7 +100,7 @@ public class RouteTransfer extends AsyncTask<RouteData, Void, Integer> {
                     socket.close();
                 }
                 catch(IOException ioe) {
-
+                    Log.e(Application.TAG, "Error while closing sockets: " + ioe);
                 }
             }
 

@@ -802,8 +802,15 @@ public class MainActivity extends AppCompatActivity implements LocationListener,
                             req.execute(new ResultListener<Location>() {
                                 @Override
                                 public void onCompleted(Location location, ErrorCode errorCode) {
-                                    ParkingRenderer.announceParking(tts, location.getAddress().getStreet());
-                                    showParkingData(location.getAddress().getStreet());
+                                    Address address = location.getAddress();
+                                    String parkingAddress = address.getStreet();
+                                    if(address.getHouseNumber() != null && address.getHouseNumber().length() > 0) {
+                                        parkingAddress += ", " + address.getHouseNumber();
+                                    }
+
+                                    ParkingRenderer.announceParking(tts, parkingAddress);
+                                    routeData.parkingAddress = parkingAddress;
+                                    showParkingData(parkingAddress);
                                 }
                             });
                         }
@@ -811,8 +818,12 @@ public class MainActivity extends AppCompatActivity implements LocationListener,
                             // First parking is taken unfortunately they are not ordered by distance
                             String parkingName = (String)data.get(0).attributes.get("name");
                             ParkingRenderer.announceParking(tts, parkingName);
+                            routeData.parkingAddress = parkingName;
                             showParkingData(parkingName);
                         }
+
+                        routeData.parkingCoordinates = new GeoCoordinate(data.get(0).location[0],
+                                                            data.get(0).location[1]);
 
                         ParkingRouteCalculator parkingRoute = new ParkingRouteCalculator();
                         ParkingRouteData prd = new ParkingRouteData();

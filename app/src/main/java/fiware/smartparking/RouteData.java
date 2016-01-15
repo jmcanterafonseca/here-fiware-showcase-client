@@ -21,5 +21,8 @@ public class RouteData {
     public GeoCoordinate originCoordinates;
     public GeoCoordinate destinationCoordinates;
 
+    public GeoCoordinate parkingCoordinates;
+    public String parkingAddress;
+
     public Route route;
 }
