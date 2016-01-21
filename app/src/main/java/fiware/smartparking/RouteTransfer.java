@@ -64,8 +64,9 @@ public class RouteTransfer extends AsyncTask<RouteData, Void, Integer> {
         BluetoothDevice device = null;
         for(BluetoothDevice bt : pairedDevices) {
             Log.d(Application.TAG, "Paired Device: " + bt.getName());
-            if(bt.getName().equals("Fiware-Here-Slave")) {
+            if(bt.getName().indexOf("Fiware-Here-Slave") == 0) {
                 device = bt;
+                break;
             }
         }
 

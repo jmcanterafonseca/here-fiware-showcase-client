@@ -22,4 +22,7 @@ public class Application {
 
     public static String TAG = "FIWARE-HERE";
     public static String TRANSFER_RESULT = "Transfer-Result";
+
+    // We will look for parkings not further than 3km
+    public static int MAX_PARKING_DISTANCE = 3000;
 }

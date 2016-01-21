@@ -7,7 +7,6 @@ import com.here.android.mpa.common.GeoCoordinate;
 import com.here.android.mpa.common.GeoPolygon;
 
 import java.io.BufferedReader;
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
@@ -22,12 +21,35 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 /**
- * Created by jmcf on 9/11/15.
+ *
+ *   Retrieves data from the city by calling FIWARE-HERE Adaptor
+ *
+ *
  */
 public class CityDataRetriever extends AsyncTask<CityDataRequest, Integer, List<Entity>> {
     private CityDataListener listener;
 
     private static String SERVICE_URL = "http://130.206.83.68:7007/v2/entities";
+
+    private static String[] POLLUTANTS = {
+            "SO2",
+            "CO",
+            "NO",
+            "NO2",
+            "PM2.5",
+            "PM10",
+            "NOx",
+            "O3",
+            "TOL",
+            "BEN",
+            "EBE",
+            "MXY",
+            "PXY",
+            "OXY",
+            "TCH",
+            "CH4",
+            "NHMC"
+    };
 
     protected List<Entity> doInBackground(CityDataRequest... request) {
         String urlString = createRequestURL(request[0]);
@@ -49,7 +71,7 @@ public class CityDataRetriever extends AsyncTask<CityDataRequest, Integer, List<
         try{
             URL url = new URL(urlString);
 
-            Log.d("FIWARE-HERE", "URL: " + urlString);
+            Log.d(Application.TAG, "URL: " + urlString);
 
             HttpURLConnection connection = (HttpURLConnection)url.openConnection();
             connection.setRequestProperty("User-Agent", "Android");
@@ -60,12 +82,12 @@ public class CityDataRetriever extends AsyncTask<CityDataRequest, Integer, List<
             InputStream inputStream = connection.getInputStream();
 
             BufferedReader rd = new BufferedReader(new InputStreamReader(inputStream));
-            String line = "";
+            String line;
             while ((line = rd.readLine()) != null) {
                 output.append(line);
             }
 
-            Log.d("FIWARE-HERE","Response: " + output.toString());
+            Log.d(Application.TAG,"Response: " + output.toString());
             JSONArray array = new JSONArray(output.toString());
 
             for(int j = 0; j < array.length(); j++) {
@@ -94,21 +116,34 @@ public class CityDataRetriever extends AsyncTask<CityDataRequest, Integer, List<
                 out.add(ent);
             }
         } catch (Exception e) {
-            Log.e("FIWARE-HERE", e.toString());
+            Log.e(Application.TAG, e.toString());
         }
 
         return out;
     }
 
     private void fillAttributes(JSONObject obj, String type, Map<String, Object> attrs) throws Exception {
-        if (type.equals("EnvironmentEvent")) {
-            getDoubleJSONAttr("noise_level", obj, "noiseLevel", attrs);
+        if(type.equals("TrafficEvent")) {
+
+        }
+        else if(type.equals("AmbientObserved")) {
             getDoubleJSONAttr("temperature", obj, "temperature", attrs);
             getDoubleJSONAttr("humidity", obj, "humidity", attrs);
-            getDoubleJSONAttr("processed_ozone", obj, "processedOzone", attrs);
-        }
-        else if(type.equals("TrafficEvent")) {
+            getDoubleJSONAttr("noiseLevel", obj, "noiseLevel", attrs);
+            try {
+                JSONObject pollutants = obj.getJSONObject("pollutants");
+                for(String pollutant : POLLUTANTS) {
+                    try {
+                        double value =
+                                pollutants.getJSONObject(pollutant).getDouble("concentration");
+                        attrs.put(pollutant, value);
+                    }
+                    catch(JSONException jsoe) { }
+                }
+            }
+            catch(JSONException jsoe) {
 
+            }
         }
         else if(type.equals("ParkingLot") || type.equals("StreetParking")) {
             getIntegerJSONAttr("availableSpotNumber", obj, "availableSpotNumber", attrs);

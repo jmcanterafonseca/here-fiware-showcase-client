@@ -75,7 +75,8 @@ public class RouteActivity implements LocationListener {
             "Amsterdam",
             "Santander",
             "Sevilla",
-            "Málaga"
+            "Málaga",
+            "Madrid"
     };
     private static double[][] CITY_COORDS = new double[][] {
             { 41.14946, -8.61031 },
@@ -84,9 +85,10 @@ public class RouteActivity implements LocationListener {
             { 41.38561, 2.16873 },
             { 40.64123, -8.65391 },
             { 52.3731, 4.89329 },
-            { 43.4666, -3.79998},
-            { 38.80889, -7.03888},
-            { 36.71667, -4.41668}
+            { 43.4666, -3.79998 },
+            { 38.80889, -7.03888 },
+            { 36.71667, -4.41668 },
+            { 40.42028, -3.70578 }
     };
 
     private static Map<String, double[]> cityCoords = new HashMap<String, double[]>();

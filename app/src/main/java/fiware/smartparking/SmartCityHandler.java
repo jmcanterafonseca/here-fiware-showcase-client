@@ -11,7 +11,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Created by jmcf on 12/11/15.
+ *   Handles data coming from the smart city
+ *
+ *
  */
 public class SmartCityHandler extends AsyncTask<SmartCityRequest, Integer, String> {
 
@@ -36,12 +38,12 @@ public class SmartCityHandler extends AsyncTask<SmartCityRequest, Integer, Strin
                 continue;
             }
 
-            if(ent.type.equals("EnvironmentEvent")) {
+           if(ent.type.equals("AmbientObserved")) {
                 environment.add(ent);
                 renderedEntities++;
             }
             else {
-               parkings.add(ent);
+                parkings.add(ent);
             }
 
             input.renderedEntities.put(ent.id, ent.id);

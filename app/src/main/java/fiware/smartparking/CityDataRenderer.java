@@ -18,7 +18,9 @@ import java.io.IOException;
 import java.util.List;
 
 /**
- * Created by jmcf on 10/11/15.
+ *
+ *  Renders city data
+ *
  */
 public class CityDataRenderer {
     public static String renderData(final Map map, TextToSpeech tts, Entity ent) {
@@ -29,7 +31,7 @@ public class CityDataRenderer {
             sensorImg.setImageResource(R.drawable.sensor2);
         }
         catch(IOException e) {
-            Log.e("FIWARE-HERE", "Cannot load image: " + e);
+            Log.e(Application.TAG, "Cannot load image: " + e);
         }
         MapMarker marker = new MapMarker(coords, sensorImg);
         marker.setTitle("Smart City");
@@ -56,8 +58,8 @@ public class CityDataRenderer {
             tts.playSilentUtterance(500, TextToSpeech.QUEUE_ADD, ent.id + "_" + "Humidity_");
         }
 
-        if(ent.attributes.get("processedOzone") != null) {
-            String qualityId = AirQualityCalculator.getAirQualityIndex(ent.attributes);
+        String qualityId = AirQualityCalculator.getAirQualityIndex(ent.attributes);
+        if(qualityId != null) {
             String quality = AirQualityCalculator.mapDescriptions.get(qualityId);
             tts.speak("Air Quality is " + quality,
                     TextToSpeech.QUEUE_ADD, null, ent.id + "_" + "AirQuality");

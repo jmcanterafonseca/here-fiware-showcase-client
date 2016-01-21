@@ -774,7 +774,8 @@ public class MainActivity extends AppCompatActivity implements LocationListener,
     }
 
     private void handleParkingMode(final GeoCoordinate coord, long distance) {
-        if(!parkingFound && !pendingParkingRequest) {
+        if (!parkingFound && !pendingParkingRequest
+                && parkingRadius < Application.MAX_PARKING_DISTANCE) {
             CityDataRequest reqData = new CityDataRequest();
             reqData.radius = parkingRadius / 2;
             reqData.coordinates = new double[]{
@@ -855,6 +856,10 @@ public class MainActivity extends AppCompatActivity implements LocationListener,
             Log.d("FIWARE-HERE", "Asking parking data in a radius of: " + parkingRadius);
             retriever.execute(reqData);
         }
+        else if (parkingRadius >= Application.MAX_PARKING_DISTANCE) {
+            parkingFound = true;
+            parkingData.setText("No suitable parking found");
+        }
     }
 
     private void updateNavigationInfo(final GeoPosition loc) {
@@ -906,7 +911,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener,
             handleParkingMode(loc.getCoordinate(), currentDistance);
         }
 
-        if(currentDistance < Application.THRESHOLD_DISTANCE &&
+        if (currentDistance < Application.THRESHOLD_DISTANCE &&
                 (previousDistance  - currentDistance > (Application.DEFAULT_RADIUS - 100)
                         || previousDistance == 0)) {
             previousDistance = currentDistance;
@@ -916,8 +921,8 @@ public class MainActivity extends AppCompatActivity implements LocationListener,
             reqData.coordinates = new double[]{loc.getCoordinate().getLatitude(),
                     loc.getCoordinate().getLongitude()};
 
-            reqData.types.add("EnvironmentEvent");
             reqData.types.add("Parking");
+            reqData.types.add("AmbientObserved");
 
             Log.d("FIWARE-HERE", "Going to retrieve data ...");
             CityDataRetriever retriever = new CityDataRetriever();
