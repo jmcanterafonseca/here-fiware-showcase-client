@@ -6,11 +6,14 @@ import android.widget.TextView;
 
 import com.here.android.mpa.common.GeoCoordinate;
 import com.here.android.mpa.mapping.Map;
+import com.here.android.mpa.mapping.MapPolygon;
 
 import java.util.List;
 
 /**
- * Created by jmcf on 12/11/15.
+ *   This class holds data for the SmartCityHandler which will launch
+ *   the rendering process
+ *
  */
 public class SmartCityRequest {
     public Map map;
@@ -19,7 +22,4 @@ public class SmartCityRequest {
     public java.util.Map renderedEntities;
     public List<Entity> data;
     public String context;
-
-    public RelativeLayout dataContainer;
-    public TextView scityData;
 }

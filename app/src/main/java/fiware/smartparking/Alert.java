@@ -5,7 +5,8 @@ import android.content.Context;
 import android.content.DialogInterface;
 
 /**
- * Created by jmcf on 11/11/15.
+ *   Shows an alert to the user
+ *
  */
 public class Alert {
     public static AlertDialog show(Context ctx, String msg) {

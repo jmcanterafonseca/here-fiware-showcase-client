@@ -74,7 +74,7 @@ public class CityDataRetriever extends AsyncTask<CityDataRequest, Integer, List<
             Log.d(Application.TAG, "URL: " + urlString);
 
             HttpURLConnection connection = (HttpURLConnection)url.openConnection();
-            connection.setRequestProperty("User-Agent", "Android");
+            connection.setRequestProperty("User-Agent", "FIWARE-HERE-Navigator");
             connection.setRequestMethod("GET");
             connection.setDoInput(true);
             connection.connect();
@@ -87,7 +87,7 @@ public class CityDataRetriever extends AsyncTask<CityDataRequest, Integer, List<
                 output.append(line);
             }
 
-            Log.d(Application.TAG,"Response: " + output.toString());
+            Log.d(Application.TAG, "Response: " + output.toString());
             JSONArray array = new JSONArray(output.toString());
 
             for(int j = 0; j < array.length(); j++) {
@@ -116,83 +116,107 @@ public class CityDataRetriever extends AsyncTask<CityDataRequest, Integer, List<
                 out.add(ent);
             }
         } catch (Exception e) {
-            Log.e(Application.TAG, e.toString());
+            Log.e(Application.TAG, "While obtaining data: " + e.toString());
         }
 
         return out;
     }
 
-    private void fillAttributes(JSONObject obj, String type, Map<String, Object> attrs) throws Exception {
-        if(type.equals("TrafficEvent")) {
+    private void fillAmbientObserved(JSONObject obj, String type, Map<String, Object> attrs) throws Exception {
+        getDoubleJSONAttr("temperature", obj, "temperature", attrs);
+        getDoubleJSONAttr("humidity", obj, "humidity", attrs);
+        getDoubleJSONAttr("noiseLevel", obj, "noiseLevel", attrs);
+        try {
+            JSONObject pollutants = obj.getJSONObject("pollutants");
+            for(String pollutant : POLLUTANTS) {
+                try {
+                    double value =
+                            pollutants.getJSONObject(pollutant).getDouble("concentration");
+                    attrs.put(pollutant, value);
+                }
+                catch(JSONException jsoe) { }
+            }
+        }
+        catch(JSONException jsoe) {
 
         }
-        else if(type.equals("AmbientObserved")) {
-            getDoubleJSONAttr("temperature", obj, "temperature", attrs);
-            getDoubleJSONAttr("humidity", obj, "humidity", attrs);
-            getDoubleJSONAttr("noiseLevel", obj, "noiseLevel", attrs);
+    }
+
+    private void fillParking(JSONObject obj, String type,
+                             Map<String, Object> attrs) throws Exception {
+        getIntegerJSONAttr("availableSpotNumber", obj, "availableSpotNumber", attrs);
+        getIntegerJSONAttr("totalSpotNumber", obj, "totalSpotNumber", attrs);
+        getIntegerJSONAttr("capacity", obj, "totalSpotNumber", attrs);
+        getIntegerJSONAttr("parking_disposition", obj, "parkingDisposition", attrs);
+        getStringJSONAttr("name", obj, "name", attrs);
+        getStringJSONAttr("description", obj, "description", attrs);
+
+        if(type.equals("StreetParking")) {
+            boolean isArray = true;
+            JSONArray polygons = null;
+
+            List<GeoPolygon> location = new ArrayList<GeoPolygon>();
             try {
-                JSONObject pollutants = obj.getJSONObject("pollutants");
-                for(String pollutant : POLLUTANTS) {
-                    try {
-                        double value =
-                                pollutants.getJSONObject(pollutant).getDouble("concentration");
-                        attrs.put(pollutant, value);
-                    }
-                    catch(JSONException jsoe) { }
-                }
+                polygons = obj.getJSONArray("location").getJSONArray(0);
             }
             catch(JSONException jsoe) {
-
+                isArray = false;
             }
-        }
-        else if(type.equals("ParkingLot") || type.equals("StreetParking")) {
-            getIntegerJSONAttr("availableSpotNumber", obj, "availableSpotNumber", attrs);
-            getIntegerJSONAttr("totalSpotNumber", obj, "totalSpotNumber", attrs);
-            getIntegerJSONAttr("capacity", obj, "totalSpotNumber", attrs);
-            getIntegerJSONAttr("parking_disposition", obj, "parkingDisposition", attrs);
-            getStringJSONAttr("name", obj, "name", attrs);
-            getStringJSONAttr("description", obj, "description", attrs);
-
-            if(type.equals("StreetParking")) {
-                boolean isArray = true;
-                JSONArray polygons = null;
-
-                List<GeoPolygon> location = new ArrayList<GeoPolygon>();
-                try {
-                    polygons = obj.getJSONArray("location").getJSONArray(0);
-                }
-                catch(JSONException jsoe) {
-                    isArray = false;
-                }
-                if(isArray == true) {
-                    int total = polygons.length();
-                    for (int j = 0; j < total; j++) {
-                        JSONArray polygon = polygons.getJSONArray(j);
-                        List<GeoCoordinate> geoPolygon = new ArrayList<GeoCoordinate>();
-                        for (int x = 0; x < polygon.length(); x++) {
-                            float lat = Float.parseFloat(polygon.getJSONArray(x).getString(0));
-                            float lon = Float.parseFloat(polygon.getJSONArray(x).getString(1));
-                            geoPolygon.add(new GeoCoordinate(lat, lon));
-                        }
-                        location.add(new GeoPolygon(geoPolygon));
-                    }
-                }
-                else {
-                    String[] polygonCoords = obj.getString("location").split(",");
+            if(isArray == true) {
+                int total = polygons.length();
+                for (int j = 0; j < total; j++) {
+                    JSONArray polygon = polygons.getJSONArray(j);
                     List<GeoCoordinate> geoPolygon = new ArrayList<GeoCoordinate>();
-                    for(int j = 0; j < polygonCoords.length; j+=2) {
-                        float lat = Float.parseFloat(polygonCoords[j]);
-                        float lon = Float.parseFloat(polygonCoords[j + 1]);
+                    for (int x = 0; x < polygon.length(); x++) {
+                        float lat = Float.parseFloat(polygon.getJSONArray(x).getString(0));
+                        float lon = Float.parseFloat(polygon.getJSONArray(x).getString(1));
                         geoPolygon.add(new GeoCoordinate(lat, lon));
                     }
                     location.add(new GeoPolygon(geoPolygon));
                 }
-                attrs.put("polygon", location);
             }
+            else {
+                location.add(getPolygon(obj.getString("location")));
+            }
+            attrs.put("polygon", location);
+        }
+    }
+
+    private void fillAttributes(JSONObject obj, String type,
+                                Map<String, Object> attrs) throws Exception {
+        if(type.equals("TrafficEvent")) {
+
+        }
+        else if(type.equals("AmbientObserved")) {
+            fillAmbientObserved(obj,type,attrs);
+        }
+        else if(type.equals("ParkingLot") || type.equals("StreetParking")) {
+           fillParking(obj, type, attrs);
         }
         else if(type.equals("CityEvent")) {
 
         }
+        else if(type.equals("AmbientArea")) {
+            fillAmbientArea(obj,type,attrs);
+        }
+    }
+
+    private void fillAmbientArea(JSONObject obj, String type,
+                                 Map<String, Object> attrs) throws Exception {
+
+        attrs.put("polygon", getPolygon(obj.getString("location")));
+    }
+
+    private GeoPolygon getPolygon(String coords) {
+        String[] polygonCoords = coords.split(",");
+        List<GeoCoordinate> geoPolygon = new ArrayList<GeoCoordinate>();
+        for(int j = 0; j < polygonCoords.length; j+=2) {
+            float lat = Float.parseFloat(polygonCoords[j]);
+            float lon = Float.parseFloat(polygonCoords[j + 1]);
+            geoPolygon.add(new GeoCoordinate(lat, lon));
+        }
+
+        return new GeoPolygon(geoPolygon);
     }
 
     private String getTypes(List<String> types) {
@@ -209,8 +233,31 @@ public class CityDataRetriever extends AsyncTask<CityDataRequest, Integer, List<
     }
 
     private String createRequestURL(CityDataRequest req) {
-        return SERVICE_URL + "?" + "coords=" + req.coordinates[0] + "," + req.coordinates[1]
-                + "&radius=" + req.radius + "&type=" + getTypes(req.types) + "&geometry=Circle";
+        String geometry = req.geometry;
+        if(geometry == null) {
+            geometry = "Circle";
+        }
+
+        String radiusStr = "";
+        if(req.radius != -1) {
+            radiusStr = "&radius=" + req.radius;
+        }
+
+        String coords = "";
+        if(req.coordinates != null) {
+            coords = req.coordinates[0] + "," + req.coordinates[1];
+        }
+        else if (req.polygon != null) {
+            for (int j = 0; j < req.polygon.getNumberOfPoints(); j++) {
+                GeoCoordinate point = req.polygon.getPoint(j);
+                coords += point.getLatitude() + "," + point.getLongitude();
+                coords += ",";
+            }
+            coords = coords.substring(0,coords.length() - 1);
+        }
+
+        return SERVICE_URL + "?" + "coords=" + coords
+                + radiusStr + "&type=" + getTypes(req.types) + "&geometry=" + geometry;
     }
 
 

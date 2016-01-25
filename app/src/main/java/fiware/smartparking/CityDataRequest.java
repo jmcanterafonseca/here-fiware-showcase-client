@@ -1,13 +1,19 @@
 package fiware.smartparking;
 
+import com.here.android.mpa.common.GeoPolygon;
+
 import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Created by jmcf on 9/11/15.
+ *   Represents the data needed for the Async Task CityDataRetriever
+ *
+ *
  */
 public class CityDataRequest {
     public List<String> types = new ArrayList<String>();
     public double[] coordinates;
-    public int radius;
+    public int radius = -1;
+    public String geometry;
+    public GeoPolygon polygon;
 }

@@ -31,9 +31,10 @@ import java.util.BitSet;
 import java.util.List;
 
 
-
 /**
- * Created by Ulpgc on 04/11/2015.
+ *
+ * Renders parking entities
+ *
  */
 public class ParkingRenderer {
 

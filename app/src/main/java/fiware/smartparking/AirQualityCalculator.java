@@ -33,18 +33,18 @@ public class AirQualityCalculator {
         return out;
     }
 
-    public static String GOOD      = "Good";
-    public static String MODERATE  = "Moderate";
-    public static String USG       = "USG";
-    public static String UNHEALTHY = "Unhealthy";
+    public static String GOOD           = "Good";
+    public static String MODERATE       = "Moderate";
+    public static String USG            = "USG";
+    public static String UNHEALTHY      = "Unhealthy";
     public static String VERY_UNHEALTHY = "Very_Unhealthy";
-    public static String HAZARDOUS = "Hazardous";
+    public static String HAZARDOUS      = "Hazardous";
 
     public static String USG_DESC = "Unhealthy for Sensitive Groups";
     public static String VERY_UNHEALTHY_DESC = "Very Unhealthy";
 
-    public static String[] STATES =
-            new String[]{GOOD, MODERATE, USG, UNHEALTHY, VERY_UNHEALTHY, HAZARDOUS};
+    public static String[] STATES = new String[]{
+            GOOD, MODERATE, USG, UNHEALTHY, VERY_UNHEALTHY, HAZARDOUS };
 
     public static String[] DESCRIPTIONS = new String[] {
          GOOD, MODERATE, USG_DESC, UNHEALTHY, VERY_UNHEALTHY_DESC, HAZARDOUS

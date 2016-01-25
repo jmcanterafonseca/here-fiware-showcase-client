@@ -1,35 +1,25 @@
 package fiware.smartparking;
 
-import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.Context;
-import android.content.Intent;
 import android.content.res.Resources;
 import android.graphics.Color;
 import android.graphics.PointF;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.speech.tts.TextToSpeech;
 import android.speech.tts.UtteranceProgressListener;
 import android.support.v7.app.AppCompatActivity;
-import android.transition.Scene;
-import android.transition.TransitionManager;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.util.TypedValue;
-import android.view.LayoutInflater;
-import android.view.Menu;
-import android.view.MenuInflater;
 import android.view.MenuItem;
-import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
 import android.view.WindowManager;
 import android.view.inputmethod.InputMethodManager;
-import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.ImageView;
@@ -39,17 +29,15 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.here.android.mpa.ar.ARObject;
 import com.here.android.mpa.common.GeoBoundingBox;
 import com.here.android.mpa.common.GeoCoordinate;
+import com.here.android.mpa.common.GeoPolygon;
 import com.here.android.mpa.common.GeoPosition;
-import com.here.android.mpa.common.IconCategory;
 import com.here.android.mpa.common.Image;
 import com.here.android.mpa.common.OnEngineInitListener;
 import com.here.android.mpa.common.PositioningManager;
 import com.here.android.mpa.common.Version;
 import com.here.android.mpa.common.ViewObject;
-import com.here.android.mpa.common.ViewRect;
 import com.here.android.mpa.guidance.NavigationManager;
 import com.here.android.mpa.guidance.VoiceCatalog;
 import com.here.android.mpa.guidance.VoiceSkin;
@@ -58,27 +46,21 @@ import com.here.android.mpa.mapping.MapFragment;
 import com.here.android.mpa.mapping.MapGesture;
 import com.here.android.mpa.mapping.MapMarker;
 import com.here.android.mpa.mapping.MapObject;
+import com.here.android.mpa.mapping.MapPolygon;
 import com.here.android.mpa.mapping.MapRoute;
 import com.here.android.mpa.mapping.MapState;
 import com.here.android.mpa.routing.Maneuver;
 import com.here.android.mpa.routing.Route;
-import com.here.android.mpa.routing.RouteManager;
-import com.here.android.mpa.routing.RouteOptions;
-import com.here.android.mpa.routing.RoutePlan;
 import com.here.android.mpa.routing.RouteTta;
 import com.here.android.mpa.search.Address;
 import com.here.android.mpa.search.ErrorCode;
-import com.here.android.mpa.search.GeocodeRequest;
-import com.here.android.mpa.search.ImageMedia;
 import com.here.android.mpa.search.Location;
 import com.here.android.mpa.search.ResultListener;
 import com.here.android.mpa.search.ReverseGeocodeRequest2;
-import com.here.android.mpa.search.TextSuggestionRequest;
 
 import java.io.IOException;
 import java.lang.ref.WeakReference;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.EnumSet;
@@ -87,7 +69,12 @@ import java.util.List;
 import java.util.Locale;
 import java.util.TimeZone;
 
-public class MainActivity extends AppCompatActivity implements LocationListener, CityDataListener {
+/**
+ *  Main activity for the FIWARE-HERE Smart Navigator
+ *
+ *
+ */
+public class MainActivity extends AppCompatActivity implements LocationListener {
     private List<MapObject> mapObjects = Application.mapObjects;
 
     private double currentZoomLevel;
@@ -138,7 +125,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener,
 
     private VoiceSkin voiceSkin;
 
-    private long previousDistance;
+    private long previousDistance, previousDistanceArea;
 
     private TextToSpeech tts;
 
@@ -146,8 +133,50 @@ public class MainActivity extends AppCompatActivity implements LocationListener,
 
     private TextView scityData;
 
-    public void onCityDataReady(List<Entity> data) {
+    private AmbientAreaData ambientAreaData = new AmbientAreaData();
+
+    private boolean pendingSmartCityRequest = false;
+
+    private void onCityDataReadyProcess(List<Entity> data, List<String> typesRequested) {
        if(data.size() == 0) {
+           pendingSmartCityRequest = false;
+           if (typesRequested.size() == 1 &&
+                   typesRequested.get(0).equals(Application.AMBIENT_AREA_TYPE)) {
+               Log.d(Application.TAG, "Ambient Area not found");
+               ambientAreaData.id = null;
+               ambientAreaData.polygon = null;
+               ambientAreaData.view = null;
+           }
+           return;
+       }
+
+       if(typesRequested.size() == 1 &&
+               typesRequested.get(0).equals(Application.AMBIENT_AREA_TYPE)) {
+
+           Log.d(Application.TAG, "Ambient Area rendered");
+
+           Entity ent = data.get(0);
+           if (ambientAreaData.id == null || !ent.id.equals(ambientAreaData.id)) {
+               if (ambientAreaData.view != null) {
+                   map.removeMapObject(ambientAreaData.view);
+               }
+               ambientAreaData.id = ent.id;
+               ambientAreaData.polygon = (GeoPolygon)ent.attributes.get("polygon");
+
+               AmbientAreaRenderer ambientRenderer = new AmbientAreaRenderer(map, tts, ent);
+               ambientRenderer.render(new AmbientRenderListener() {
+                   @Override
+                   public void onRendered(String level, MapPolygon polygonView) {
+                       pendingSmartCityRequest = false;
+                       ambientAreaData.view = polygonView;
+                       mapObjects.add(polygonView);
+                   }
+               });
+
+           } else {
+               Log.d(Application.TAG, "Ambient Area remains the same");
+           }
+
            return;
        }
 
@@ -166,6 +195,8 @@ public class MainActivity extends AppCompatActivity implements LocationListener,
        sch.setListener(new RenderListener() {
            @Override
            public void onRendered(Object data, int num) {
+               java.util.Map<String,Object> result = (java.util.Map<String,Object>)data;
+               pendingSmartCityRequest = false;
            }
        });
 
@@ -478,7 +509,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener,
             @Override
             public void onEngineInitializationCompleted(OnEngineInitListener.Error error) {
                 if (error == OnEngineInitListener.Error.NONE) {
-                    Log.d("FIWARE-HERE", "Version: " + Version.SDK_API_INT);
+                    Log.d(Application.TAG, "Version: " + Version.SDK_API_INT);
                     mapFragment.getMapGesture().addOnGestureListener(gestureListener);
 
                     // retrieve a reference of the map from the map fragment
@@ -491,7 +522,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener,
                     map.getPositionIndicator().setVisible(true);
                     map.setLandmarksVisible(true);
                     map.setCartoMarkersVisible(true);
-                    // map.setVisibleLayers(Map.LayerCategory.)
+                    // map.setVisibleLayers(Map.LayerCategory.STREET_CATEGORY_0, true);
 
                     map.addTransformListener(transformListener);
 
@@ -501,7 +532,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener,
                     VoiceNavigation.downloadTargetVoiceSkin(VoiceCatalog.getInstance());
 
                 } else {
-                    Log.e("FIWARE HERE", "ERROR: Cannot initialize Map Fragment");
+                    Log.e(Application.TAG, "ERROR: Cannot initialize Map Fragment");
                 }
             }
         });
@@ -522,8 +553,8 @@ public class MainActivity extends AppCompatActivity implements LocationListener,
             @Override
             public void onDone(String utteranceId) {
                 if(utteranceId.equals("Entity_End")) {
-                    map.setZoomLevel(currentZoomLevel, map.projectToPixel(map.getCenter()).getResult(),
-                            Map.Animation.LINEAR);
+                    map.setZoomLevel(currentZoomLevel,
+                            map.projectToPixel(map.getCenter()).getResult(), Map.Animation.LINEAR);
                 }
             }
 
@@ -785,7 +816,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener,
 
             reqData.types = routeData.parkingCategory;
             if(reqData.types.size() == 0) {
-                reqData.types.add("Parking");
+                reqData.types.add(Application.PARKING_TYPE);
             }
 
             Log.d("FIWARE-HERE", "Going to retrieve parking data ...");
@@ -911,24 +942,67 @@ public class MainActivity extends AppCompatActivity implements LocationListener,
             handleParkingMode(loc.getCoordinate(), currentDistance);
         }
 
-        if (currentDistance < Application.THRESHOLD_DISTANCE &&
+
+        // Depending on whether there is a current ambient area or not the check is different
+        int threshold =  Application.DISTANCE_FREQ_AMBIENT_AREA;
+        if (ambientAreaData.id == null) {
+            threshold = Application.AMBIENT_AREA_RADIUS / 2;
+        }
+
+        if ( (previousDistanceArea  - currentDistance) > threshold) {
+            if (ambientAreaData.polygon == null ||
+                    !ambientAreaData.polygon.contains(loc.getCoordinate())) {
+
+                Log.d(Application.TAG, "Now out of the ambient Area");
+
+                if (!pendingSmartCityRequest) {
+                    String[] types = {Application.AMBIENT_AREA_TYPE};
+                    executeDataRequest(Arrays.asList(types), Application.AMBIENT_AREA_RADIUS, loc);
+                } else {
+                    Log.d(Application.TAG,
+                            "Not checking ambient area because pending smart city request");
+                }
+            }
+            else {
+                Log.d(Application.TAG, "Ambient area remains the same: " + ambientAreaData.id);
+            }
+            previousDistanceArea = currentDistance;
+        }
+
+        if ( (currentDistance < Application.THRESHOLD_DISTANCE &&
                 (previousDistance  - currentDistance > (Application.DEFAULT_RADIUS - 100)
-                        || previousDistance == 0)) {
+                        || previousDistance == 0)) && !pendingSmartCityRequest) {
             previousDistance = currentDistance;
 
-            CityDataRequest reqData = new CityDataRequest();
-            reqData.radius = Application.DEFAULT_RADIUS;
-            reqData.coordinates = new double[]{loc.getCoordinate().getLatitude(),
-                    loc.getCoordinate().getLongitude()};
-
-            reqData.types.add("Parking");
-            reqData.types.add("AmbientObserved");
-
-            Log.d("FIWARE-HERE", "Going to retrieve data ...");
-            CityDataRetriever retriever = new CityDataRetriever();
-            retriever.setListener(this);
-            retriever.execute(reqData);
+            List<String> types = Arrays.asList(
+                    Application.PARKING_TYPE,
+                    Application.AMBIENT_OBSERVED_TYPE
+            );
+            executeDataRequest(types, Application.DEFAULT_RADIUS, loc);
         }
+    }
+
+    private void executeDataRequest(final List<String> types, int radius, GeoPosition loc) {
+        CityDataRequest reqData = new CityDataRequest();
+        reqData.radius = radius;
+        reqData.coordinates = new double[]{loc.getCoordinate().getLatitude(),
+                loc.getCoordinate().getLongitude()};
+
+        for (String type : types) {
+            reqData.types.add(type);
+        }
+
+        Log.d(Application.TAG, "Going to retrieve data ..." + reqData.types);
+        CityDataRetriever retriever = new CityDataRetriever();
+        retriever.setListener(new CityDataListener() {
+            @Override
+            public void onCityDataReady(List<Entity> data) {
+                onCityDataReadyProcess(data, types);
+            }
+        });
+
+        pendingSmartCityRequest = true;
+        retriever.execute(reqData);
     }
 
     private void doTerminateSimulation() {
@@ -1114,8 +1188,11 @@ public class MainActivity extends AppCompatActivity implements LocationListener,
             navMan.setVoiceSkin(voiceSkin);
         }
 
+        // We set this variable to avoid nay kind of request before the area request
+        pendingSmartCityRequest = true;
+
         // Start navigation simulation
-        NavigationManager.Error error = navMan.simulate(route, 14);
+        NavigationManager.Error error = navMan.simulate(route, Application.DEFAULT_SPEED);
         if (error != NavigationManager.Error.NONE) {
             Toast.makeText(getApplicationContext(),
                      "Failed to start navigation. Error: " + error, Toast.LENGTH_LONG).show();
@@ -1130,6 +1207,12 @@ public class MainActivity extends AppCompatActivity implements LocationListener,
         underSimulation = true;
         navMan.setNaturalGuidanceMode(
                 EnumSet.of(NavigationManager.NaturalGuidanceMode.JUNCTION));
+
+        // We try to obtain the ambient zone, first
+        String[] types = { Application.AMBIENT_AREA_TYPE };
+        previousDistanceArea = routeData.route.getLength();
+        executeDataRequest(Arrays.asList(types),
+                Application.AMBIENT_AREA_RADIUS, new GeoPosition(route.getStart()));
     }
 
     private Map.OnTransformListener transformListener = new Map.OnTransformListener() {

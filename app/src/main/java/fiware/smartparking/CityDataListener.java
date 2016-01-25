@@ -3,7 +3,9 @@ package fiware.smartparking;
 import java.util.List;
 
 /**
- * Created by jmcf on 9/11/15.
+ *  Interface for listeners when city data retrieval tasks finish
+ *
+ *
  */
 public interface CityDataListener {
     public void onCityDataReady(List<Entity> data);

@@ -1,69 +1,70 @@
 package fiware.smartparking;
 
 import android.os.AsyncTask;
-import android.os.Handler;
 import android.speech.tts.TextToSpeech;
 import android.util.Log;
-import android.widget.RelativeLayout;
-import android.widget.Toast;
+
+import com.here.android.mpa.mapping.MapPolygon;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  *   Handles data coming from the smart city
  *
  *
  */
-public class SmartCityHandler extends AsyncTask<SmartCityRequest, Integer, String> {
+public class SmartCityHandler extends AsyncTask<SmartCityRequest, Integer, Map<String,Object>> {
 
     private RenderListener listener;
     private int renderedEntities;
 
-    protected String doInBackground(SmartCityRequest... request) {
+    protected Map<String,Object> doInBackground(SmartCityRequest... request) {
         SmartCityRequest input = request[0];
         List<Entity> data = input.data;
 
-        Log.d("FIWARE-HERE", "Smart-City Onroute data found: " + input.data.size());
+        Log.d(Application.TAG, "Smart-City Onroute data found: " + input.data.size());
 
         String str = null;
         List<Entity> parkings = new ArrayList<Entity>();
         List<Entity> environment = new ArrayList<Entity>();
 
-        for(int j = 0; j < data.size(); j++) {
-            Entity ent = data.get(j);
+        Map<String,Object> output = new HashMap<String, Object>();
 
+        for (Entity ent : data) {
             // Avoid rendering the same info two times
-            if (input.renderedEntities.get(ent.id) != null) {
-                continue;
-            }
+           if (input.renderedEntities.get(ent.id) != null) {
+               continue;
+           }
 
-           if(ent.type.equals("AmbientObserved")) {
-                environment.add(ent);
-                renderedEntities++;
-            }
-            else {
+           if (ent.type.equals(Application.AMBIENT_OBSERVED_TYPE)) {
+               environment.add(ent);
+               renderedEntities++;
+           }
+           else if (ent.type.equals(Application.PARKING_LOT_TYPE) ||
+                   ent.type.equals(Application.STREET_PARKING_TYPE)) {
                 parkings.add(ent);
-            }
-
-            input.renderedEntities.put(ent.id, ent.id);
+           }
+           input.renderedEntities.put(ent.id, ent.id);
         }
 
-        ParkingRenderer.render(Application.mainActivity.getApplicationContext(), input.map,
-                                                                                        parkings);
+        ParkingRenderer.render( Application.mainActivity.getApplicationContext(),
+                                input.map, parkings);
 
         if(environment.size() > 0) {
             input.tts.speak("Smart City Data", TextToSpeech.QUEUE_ADD, null, "AnnounceCity");
             for(int j = 0; j < environment.size(); j++) {
-                str = CityDataRenderer.renderData(input.map,input.tts,environment.get(j));
+                CityDataRenderer.renderData(input.map,input.tts,environment.get(j));
             }
         }
 
-        return str;
+        return output;
     }
 
-    protected void onPostExecute(String str) {
-        listener.onRendered(str, renderedEntities);
+    protected void onPostExecute(Map<String, Object> out) {
+        listener.onRendered(out, renderedEntities);
     }
 
     public void setListener(RenderListener list) {

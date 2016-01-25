@@ -4,7 +4,9 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Created by jmcf on 9/11/15.
+ *  Represents a Smart City entity provided by FIWARE
+ *
+ *
  */
 public class Entity {
     public String id;

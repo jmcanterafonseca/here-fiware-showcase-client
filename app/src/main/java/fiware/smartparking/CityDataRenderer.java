@@ -1,13 +1,8 @@
 package fiware.smartparking;
 
 import android.graphics.PointF;
-import android.os.Handler;
 import android.speech.tts.TextToSpeech;
-import android.util.DisplayMetrics;
 import android.util.Log;
-import android.widget.RelativeLayout;
-import android.widget.Toast;
-
 import com.here.android.mpa.common.GeoBoundingBox;
 import com.here.android.mpa.common.GeoCoordinate;
 import com.here.android.mpa.common.Image;
@@ -19,11 +14,11 @@ import java.util.List;
 
 /**
  *
- *  Renders city data
+ *  Helper class for rendering city data
  *
  */
 public class CityDataRenderer {
-    public static String renderData(final Map map, TextToSpeech tts, Entity ent) {
+    public static String renderData(final Map hereMap, TextToSpeech tts, Entity ent) {
         GeoCoordinate coords = new GeoCoordinate(ent.location[0], ent.location[1]);
 
         Image sensorImg = new Image();
@@ -35,7 +30,7 @@ public class CityDataRenderer {
         }
         MapMarker marker = new MapMarker(coords, sensorImg);
         marker.setTitle("Smart City");
-        map.addMapObject(marker);
+        hereMap.addMapObject(marker);
 
         StringBuffer str = new StringBuffer();
 
@@ -94,12 +89,13 @@ public class CityDataRenderer {
 
         Application.mapObjects.add(marker);
 
-        GeoBoundingBox bb = map.getBoundingBox();
+        GeoBoundingBox bb = hereMap.getBoundingBox();
         if(!bb.contains(coords)) {
-            Map.PixelResult pr = map.projectToPixel(coords);
+            Map.PixelResult pr = hereMap.projectToPixel(coords);
             PointF point = pr.getResult();
-            final double currentZoom = map.getZoomLevel();
-            map.setZoomLevel(map.getZoomLevel() - 2, map.projectToPixel(map.getCenter()).getResult(),
+            final double currentZoom = hereMap.getZoomLevel();
+            hereMap.setZoomLevel(hereMap.getZoomLevel() - 2,
+                    hereMap.projectToPixel(hereMap.getCenter()).getResult(),
                                                     Map.Animation.LINEAR);
         }
 
