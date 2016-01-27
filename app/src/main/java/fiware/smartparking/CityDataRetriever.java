@@ -31,26 +31,6 @@ public class CityDataRetriever extends AsyncTask<CityDataRequest, Integer, List<
 
     private static String SERVICE_URL = "http://130.206.83.68:7007/v2/entities";
 
-    private static String[] POLLUTANTS = {
-            "SO2",
-            "CO",
-            "NO",
-            "NO2",
-            "PM2.5",
-            "PM10",
-            "NOx",
-            "O3",
-            "TOL",
-            "BEN",
-            "EBE",
-            "MXY",
-            "PXY",
-            "OXY",
-            "TCH",
-            "CH4",
-            "NHMC"
-    };
-
     protected List<Entity> doInBackground(CityDataRequest... request) {
         String urlString = createRequestURL(request[0]);
 
@@ -128,7 +108,7 @@ public class CityDataRetriever extends AsyncTask<CityDataRequest, Integer, List<
         getDoubleJSONAttr("noiseLevel", obj, "noiseLevel", attrs);
         try {
             JSONObject pollutants = obj.getJSONObject("pollutants");
-            for(String pollutant : POLLUTANTS) {
+            for(String pollutant : Application.POLLUTANTS) {
                 try {
                     double value =
                             pollutants.getJSONObject(pollutant).getDouble("concentration");

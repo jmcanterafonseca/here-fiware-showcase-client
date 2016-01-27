@@ -53,6 +53,7 @@ public class CityDataRenderer {
             tts.playSilentUtterance(500, TextToSpeech.QUEUE_ADD, ent.id + "_" + "Humidity_");
         }
 
+        /*
         String qualityId = AirQualityCalculator.getAirQualityIndex(ent.attributes);
         if(qualityId != null) {
             String quality = AirQualityCalculator.mapDescriptions.get(qualityId);
@@ -64,6 +65,7 @@ public class CityDataRenderer {
             }
             str.append("Air Quality is " + quality);
         }
+        */
 
         if(ent.attributes.get("noiseLevel") != null) {
             double noiseLevel = ((Double)ent.attributes.get("noiseLevel")).doubleValue();

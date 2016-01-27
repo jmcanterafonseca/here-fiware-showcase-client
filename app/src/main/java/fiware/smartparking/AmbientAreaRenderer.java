@@ -10,7 +10,9 @@ import com.here.android.mpa.mapping.Map;
 import com.here.android.mpa.mapping.MapOverlayType;
 import com.here.android.mpa.mapping.MapPolygon;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 
 /**
@@ -24,7 +26,17 @@ public class AmbientAreaRenderer implements CityDataListener {
     private TextToSpeech tts;
     private Entity ambientArea;
     private GeoPolygon polygon;
-    private AmbientRenderListener listener;
+    private AmbientAreaRenderListener listener;
+
+    private static java.util.Map<String,String> AREA_COLORS= new HashMap<>();
+
+    static {
+        int index = 0;
+        for(String pollutionLevel : Application.POLLUTION_LEVELS) {
+            AREA_COLORS.put(pollutionLevel,Application.POLLUTION_COLORS[index++]);
+        }
+
+    }
 
     public AmbientAreaRenderer(Map hereMap, TextToSpeech tts, Entity ent) {
         this.hereMap = hereMap;
@@ -35,9 +47,58 @@ public class AmbientAreaRenderer implements CityDataListener {
 
     @Override
     public void onCityDataReady(List<Entity> data) {
-        MapPolygon polygon = doRender(null);
+        // When city data is ready, obtain data from all the sensors
+        // and then pass the ball to the AirQualityCalculator
+        java.util.Map<String,List<Double>> pollutants = new HashMap<>();
 
-        listener.onRendered(null,polygon);
+        for (Entity ent: data) {
+            if(!ent.type.equals(Application.AMBIENT_OBSERVED_TYPE)) {
+                continue;
+            }
+
+            java.util.Map<String,Object> attributes = ent.attributes;
+
+            for (String pollutant : Application.POLLUTANTS) {
+                if (attributes.get(pollutant) != null) {
+                    List<Double> accumulated = pollutants.get(pollutant);
+                    if(accumulated == null) {
+                        accumulated = new ArrayList<>();
+                        pollutants.put(pollutant, accumulated);
+                    }
+                    accumulated.add((Double)attributes.get(pollutant));
+                }
+            }
+        }
+
+        java.util.Map<String, Double> finalValues = new HashMap<>();
+
+        for(String pollutant : pollutants.keySet()) {
+            List<Double> values = pollutants.get(pollutant);
+            double average = 0;
+            for(double value : values) {
+                average += value;
+            }
+            average /= values.size();
+
+            finalValues.put(pollutant, average);
+        }
+
+        AirQualityCalculator calculator = new AirQualityCalculator();
+        calculator.setListener(new ResultListener<java.util.Map>() {
+            @Override
+            public void onResultReady(java.util.Map result) {
+                if (result != null) {
+                    // Lets see what is the greatest AQI and then paint accordingly
+                    for (java.util.Map aqiInfo : result.keySet()) {
+                        
+                    }
+                    MapPolygon polygon = doRender(null);
+                    listener.onRendered(null, polygon);
+                }
+            }
+        });
+
+        calculator.execute(finalValues);
     }
 
     private void getDataFromSensors() {
@@ -52,7 +113,7 @@ public class AmbientAreaRenderer implements CityDataListener {
         retriever.execute(req);
     }
 
-    public void render(AmbientRenderListener listener) {
+    public void render(AmbientAreaRenderListener listener) {
         this.listener = listener;
         polygon = (GeoPolygon)ambientArea.attributes.get("polygon");
         getDataFromSensors();

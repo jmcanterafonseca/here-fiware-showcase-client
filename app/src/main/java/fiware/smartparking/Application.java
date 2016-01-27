@@ -43,4 +43,33 @@ public class Application {
 
     /* 14 m/s == 50 kms/h */
     public static int DEFAULT_SPEED = 14;
+
+
+    public static String[] POLLUTANTS = {
+            "SO2",
+            "CO",
+            "NO",
+            "NO2",
+            "PM2.5",
+            "PM10",
+            "NOx",
+            "O3",
+            "TOL",
+            "BEN",
+            "EBE",
+            "MXY",
+            "PXY",
+            "OXY",
+            "TCH",
+            "CH4",
+            "NHMC"
+    };
+
+    public static String[] POLLUTION_LEVELS = {
+      "VeryLow", "Low", "Medium", "High", "VeryHigh"
+    };
+
+    public static String[] POLLUTION_COLORS = {
+      "", "", "", "", ""
+    };
 }

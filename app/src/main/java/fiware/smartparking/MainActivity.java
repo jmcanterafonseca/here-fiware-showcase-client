@@ -164,7 +164,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
                ambientAreaData.polygon = (GeoPolygon)ent.attributes.get("polygon");
 
                AmbientAreaRenderer ambientRenderer = new AmbientAreaRenderer(map, tts, ent);
-               ambientRenderer.render(new AmbientRenderListener() {
+               ambientRenderer.render(new AmbientAreaRenderListener() {
                    @Override
                    public void onRendered(String level, MapPolygon polygonView) {
                        pendingSmartCityRequest = false;
@@ -1089,7 +1089,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
         LinearLayout.LayoutParams layoutParamsInner = new LinearLayout.LayoutParams(
                  0, RelativeLayout.LayoutParams.MATCH_PARENT, 0.90f);
         innerMapLayout.setLayoutParams(layoutParamsInner);
-        ((RelativeLayout)findViewById(R.id.oascDataLayout)).setVisibility(RelativeLayout.VISIBLE);
+        // findViewById(R.id.oascDataLayout).setVisibility(RelativeLayout.VISIBLE);
 
         popupMenu.getMenu().setGroupVisible(R.id.simulationGroup, true);
         popupMenu.getMenu().setGroupVisible(R.id.initialGroup, false);
@@ -1115,7 +1115,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
         LinearLayout.LayoutParams layoutParamsInner = new LinearLayout.LayoutParams(
                 0, RelativeLayout.LayoutParams.MATCH_PARENT, 1.0f);
         innerMapLayout.setLayoutParams(layoutParamsInner);
-        ((RelativeLayout)findViewById(R.id.oascDataLayout)).setVisibility(RelativeLayout.GONE);
+        findViewById(R.id.oascDataLayout).setVisibility(RelativeLayout.GONE);
 
         if(popupMenu != null) {
             popupMenu.getMenu().setGroupVisible(R.id.initialGroup, true);
