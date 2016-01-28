@@ -56,7 +56,7 @@ public class SmartCityHandler extends AsyncTask<SmartCityRequest, Integer, Map<S
         if(environment.size() > 0) {
             input.tts.speak("Smart City Data", TextToSpeech.QUEUE_ADD, null, "AnnounceCity");
             for(int j = 0; j < environment.size(); j++) {
-                CityDataRenderer.renderData(input.map,input.tts,environment.get(j));
+                new CityDataRenderer().renderData(input.map, input.tts, environment.get(j));
             }
         }
 

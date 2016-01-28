@@ -3,13 +3,18 @@ package fiware.smartparking;
 import android.graphics.Color;
 import android.graphics.PointF;
 import android.speech.tts.TextToSpeech;
+import android.util.Log;
 
 import com.here.android.mpa.common.GeoBoundingBox;
+import com.here.android.mpa.common.GeoCoordinate;
 import com.here.android.mpa.common.GeoPolygon;
+import com.here.android.mpa.common.Image;
 import com.here.android.mpa.mapping.Map;
+import com.here.android.mpa.mapping.MapMarker;
 import com.here.android.mpa.mapping.MapOverlayType;
 import com.here.android.mpa.mapping.MapPolygon;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -84,16 +89,33 @@ public class AmbientAreaRenderer implements CityDataListener {
         }
 
         AirQualityCalculator calculator = new AirQualityCalculator();
-        calculator.setListener(new ResultListener<java.util.Map>() {
+        calculator.setListener(new ResultListener<java.util.Map<String,java.util.Map>>() {
             @Override
-            public void onResultReady(java.util.Map result) {
+            public void onResultReady(java.util.Map<String,java.util.Map> result) {
                 if (result != null) {
-                    // Lets see what is the greatest AQI and then paint accordingly
-                    for (java.util.Map aqiInfo : result.keySet()) {
-                        
-                    }
-                    MapPolygon polygon = doRender(null);
-                    listener.onRendered(null, polygon);
+                    Utilities.AirQualityData data = Utilities.getAirQualityData(result);
+
+                    String aqiLevelName = (String)data.worstIndex.get("name");
+
+                    MapPolygon polygon = doRender(AREA_COLORS.get(aqiLevelName));
+                    tts.speak("You have entered an area with "
+                                    + data.worstIndex.get("description") + " pollution",
+                            TextToSpeech.QUEUE_ADD, null, "AmbientArea" + '_' + ambientArea.id);
+
+                    tts.playSilentUtterance(100, TextToSpeech.QUEUE_ADD, "Entity_End");
+
+                    GeoCoordinate coords = new GeoCoordinate(ambientArea.location[0],
+                            ambientArea.location[1]);
+
+                    MapMarker marker = Utilities.buildSensorMarker(coords, "Air Quality",
+                            data.asString);
+
+                    hereMap.addMapObject(marker);
+                    marker.showInfoBubble();
+
+                    Application.mapObjects.add(marker);
+
+                    listener.onRendered(aqiLevelName, polygon);
                 }
             }
         });
@@ -122,15 +144,12 @@ public class AmbientAreaRenderer implements CityDataListener {
 
     private MapPolygon doRender(String targetColor) {
         MapPolygon ambientAreaPolygon = new MapPolygon(polygon);
-        ambientAreaPolygon.setLineColor(Color.parseColor("#8080CBC4"));
-        ambientAreaPolygon.setFillColor(Color.parseColor("#80B2DFDB"));
+        ambientAreaPolygon.setLineColor(Color.parseColor(targetColor));
+        ambientAreaPolygon.setFillColor(Color.parseColor(targetColor));
 
         ambientAreaPolygon.setOverlayType(MapOverlayType.BACKGROUND_OVERLAY);
 
         hereMap.addMapObject(ambientAreaPolygon);
-
-        tts.speak("You have entered an area with good air quality",
-                TextToSpeech.QUEUE_ADD, null, "AmbientArea" + '_' + ambientArea.id);
 
         GeoBoundingBox bb = hereMap.getBoundingBox();
         GeoBoundingBox box = polygon.getBoundingBox();
@@ -139,8 +158,6 @@ public class AmbientAreaRenderer implements CityDataListener {
             PointF point = pr.getResult();
             hereMap.setZoomLevel(hereMap.getZoomLevel() - 3,  point, Map.Animation.LINEAR);
         }
-
-        tts.playSilentUtterance(100, TextToSpeech.QUEUE_ADD, "Entity_End");
 
         return ambientAreaPolygon;
     }

@@ -138,24 +138,28 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
     private boolean pendingSmartCityRequest = false;
 
     private void onCityDataReadyProcess(List<Entity> data, List<String> typesRequested) {
-       if(data.size() == 0) {
+       if (data.size() == 0) {
            pendingSmartCityRequest = false;
+
            if (typesRequested.size() == 1 &&
                    typesRequested.get(0).equals(Application.AMBIENT_AREA_TYPE)) {
                Log.d(Application.TAG, "Ambient Area not found");
                ambientAreaData.id = null;
                ambientAreaData.polygon = null;
+               if (ambientAreaData.view != null) {
+                   map.removeMapObject(ambientAreaData.view);
+               }
                ambientAreaData.view = null;
            }
            return;
        }
 
-       if(typesRequested.size() == 1 &&
+       if (typesRequested.size() == 1 &&
                typesRequested.get(0).equals(Application.AMBIENT_AREA_TYPE)) {
 
-           Log.d(Application.TAG, "Ambient Area rendered");
-
            Entity ent = data.get(0);
+           Log.d(Application.TAG, "Ambient Area: " + ent.id);
+
            if (ambientAreaData.id == null || !ent.id.equals(ambientAreaData.id)) {
                if (ambientAreaData.view != null) {
                    map.removeMapObject(ambientAreaData.view);
@@ -174,7 +178,8 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
                });
 
            } else {
-               Log.d(Application.TAG, "Ambient Area remains the same");
+               Log.d(Application.TAG, "Ambient Area remains the same: " + ambientAreaData.id);
+               pendingSmartCityRequest = false;
            }
 
            return;
@@ -191,7 +196,6 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
                Toast.LENGTH_LONG).show();
 
        SmartCityHandler sch = new SmartCityHandler();
-       currentZoomLevel = map.getZoomLevel();
        sch.setListener(new RenderListener() {
            @Override
            public void onRendered(Object data, int num) {
@@ -946,7 +950,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
         // Depending on whether there is a current ambient area or not the check is different
         int threshold =  Application.DISTANCE_FREQ_AMBIENT_AREA;
         if (ambientAreaData.id == null) {
-            threshold = Application.AMBIENT_AREA_RADIUS / 2;
+            threshold = Application.AMBIENT_AREA_RADIUS - 100;
         }
 
         if ( (previousDistanceArea  - currentDistance) > threshold) {
@@ -1218,7 +1222,6 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
     private Map.OnTransformListener transformListener = new Map.OnTransformListener() {
         @Override
         public void onMapTransformStart() {
-
         }
 
         public void onMapTransformEnd(MapState mapState) {
@@ -1229,6 +1232,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
             }
             else if(state.equals("GoingToDeparture")) {
                 startGuidance(routeData.route);
+                currentZoomLevel = mapState.getZoomLevel();
             }
         }
     };

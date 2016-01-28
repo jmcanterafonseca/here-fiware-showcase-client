@@ -28,7 +28,7 @@ public class Application {
     public static int MAX_PARKING_DISTANCE = 3000;
 
     // Average radius for Ambient areas
-    public static int AMBIENT_AREA_RADIUS = 1100;
+    public static int AMBIENT_AREA_RADIUS = 800;
 
     /* Every 250 meters we ask about changes on ambient area */
     public static int DISTANCE_FREQ_AMBIENT_AREA = 250;
@@ -70,6 +70,6 @@ public class Application {
     };
 
     public static String[] POLLUTION_COLORS = {
-      "", "", "", "", ""
+      "#3B388E3C", "#3B8BC34A", "#3BFFC107", "#3BFF9800", "#3BFF5722"
     };
 }

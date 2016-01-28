@@ -5,12 +5,9 @@ import android.speech.tts.TextToSpeech;
 import android.util.Log;
 import com.here.android.mpa.common.GeoBoundingBox;
 import com.here.android.mpa.common.GeoCoordinate;
-import com.here.android.mpa.common.Image;
 import com.here.android.mpa.mapping.Map;
 import com.here.android.mpa.mapping.MapMarker;
 
-import java.io.IOException;
-import java.util.List;
 
 /**
  *
@@ -18,21 +15,11 @@ import java.util.List;
  *
  */
 public class CityDataRenderer {
-    public static String renderData(final Map hereMap, TextToSpeech tts, Entity ent) {
+    private StringBuffer str;
+
+    public String renderData(final Map hereMap, final TextToSpeech tts, final Entity ent) {
+        str = new StringBuffer();
         GeoCoordinate coords = new GeoCoordinate(ent.location[0], ent.location[1]);
-
-        Image sensorImg = new Image();
-        try {
-            sensorImg.setImageResource(R.drawable.sensor2);
-        }
-        catch(IOException e) {
-            Log.e(Application.TAG, "Cannot load image: " + e);
-        }
-        MapMarker marker = new MapMarker(coords, sensorImg);
-        marker.setTitle("Smart City");
-        hereMap.addMapObject(marker);
-
-        StringBuffer str = new StringBuffer();
 
         Double temperature = (Double)ent.attributes.get("temperature");
         if(temperature != null) {
@@ -53,20 +40,6 @@ public class CityDataRenderer {
             tts.playSilentUtterance(500, TextToSpeech.QUEUE_ADD, ent.id + "_" + "Humidity_");
         }
 
-        /*
-        String qualityId = AirQualityCalculator.getAirQualityIndex(ent.attributes);
-        if(qualityId != null) {
-            String quality = AirQualityCalculator.mapDescriptions.get(qualityId);
-            tts.speak("Air Quality is " + quality,
-                    TextToSpeech.QUEUE_ADD, null, ent.id + "_" + "AirQuality");
-            tts.playSilentUtterance(500, TextToSpeech.QUEUE_ADD, ent.id + "_" + "AirQuality_");
-            if(str.length() > 0) {
-                str.append("\n");
-            }
-            str.append("Air Quality is " + quality);
-        }
-        */
-
         if(ent.attributes.get("noiseLevel") != null) {
             double noiseLevel = ((Double)ent.attributes.get("noiseLevel")).doubleValue();
             if(str.length() > 0) {
@@ -84,12 +57,43 @@ public class CityDataRenderer {
             }
         }
 
-        tts.playSilentUtterance(100, TextToSpeech.QUEUE_ADD, "Entity_End");
+        AirQualityCalculator calculator = new AirQualityCalculator();
+        calculator.execute(ent.attributes);
+        calculator.setListener(new ResultListener<java.util.Map<String, java.util.Map>>() {
+            @Override
+            public void onResultReady(java.util.Map<String, java.util.Map> result) {
+                Utilities.AirQualityData data = null;
+                if (result != null) {
+                    data = Utilities.getAirQualityData(result);
 
-        marker.setDescription(str.toString());
-        marker.showInfoBubble();
+                    if (data.worstIndex != null) {
+                        tts.speak("Pollution level is " + data.worstIndex.get("description"),
+                                TextToSpeech.QUEUE_ADD, null, ent.id + "_" + "AirQuality");
+                        tts.playSilentUtterance(500, TextToSpeech.QUEUE_ADD, ent.id + "_"
+                                + "AirQuality_");
+                    } else {
+                        Log.d(Application.TAG, "Air quality index not found: " + ent.id);
+                    }
+                }
 
-        Application.mapObjects.add(marker);
+                tts.playSilentUtterance(100, TextToSpeech.QUEUE_ADD, "Entity_End");
+
+                if(data.asString != null) {
+                    if (str.length() > 0) {
+                        str.append("\n");
+                    }
+                    str.append(data.asString);
+                }
+
+                GeoCoordinate coords = new GeoCoordinate(ent.location[0], ent.location[1]);
+                MapMarker marker = Utilities.buildSensorMarker(coords, "Smart City",
+                        str.toString());
+
+                hereMap.addMapObject(marker);
+                marker.showInfoBubble();
+                Application.mapObjects.add(marker);
+            }
+        });
 
         GeoBoundingBox bb = hereMap.getBoundingBox();
         if(!bb.contains(coords)) {
