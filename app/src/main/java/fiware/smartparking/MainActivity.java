@@ -2,6 +2,7 @@ package fiware.smartparking;
 
 import android.app.ProgressDialog;
 import android.content.Context;
+import android.content.pm.ApplicationInfo;
 import android.content.res.Resources;
 import android.graphics.Color;
 import android.graphics.PointF;
@@ -61,7 +62,10 @@ import com.here.android.mpa.search.ReverseGeocodeRequest2;
 import java.io.IOException;
 import java.lang.ref.WeakReference;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.EnumSet;
 import java.util.HashMap;
@@ -808,10 +812,10 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
                 RelativeLayout.LayoutParams.MATCH_PARENT, 100));
     }
 
-    private void handleParkingMode(final GeoCoordinate coord, long distance) {
+    private void handleParkingMode(final GeoCoordinate coord, final long distance) {
         if (!parkingFound && !pendingParkingRequest
                 && parkingRadius < Application.MAX_PARKING_DISTANCE) {
-            CityDataRequest reqData = new CityDataRequest();
+            final CityDataRequest reqData = new CityDataRequest();
             reqData.radius = parkingRadius / 2;
             reqData.coordinates = new double[]{
                     routeData.destinationCoordinates.getLatitude(),
@@ -823,72 +827,181 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
                 reqData.types.add(Application.PARKING_TYPE);
             }
 
-            Log.d("FIWARE-HERE", "Going to retrieve parking data ...");
+            Log.d(Application.TAG, "Going to retrieve parking data ...");
             CityDataRetriever retriever = new CityDataRetriever();
             retriever.setListener(new CityDataListener() {
                 @Override
                 public void onCityDataReady(List<Entity> data) {
-                    Log.d("FIWARE-HERE", "Parking data available: " + data.size());
+                    if(data.size() == 0) {
+                        Log.d(Application.TAG, "No parking data found.");
+                        pendingParkingRequest = false;
+                        parkingRadius += 100;
+                        return;
+                    }
+
+                    Log.d(Application.TAG, "Parking data available: " + data.size());
                     ParkingRenderer.render(getApplicationContext(), map, data);
 
-                    if(data.size() > 0) {
-                        if(data.get(0).type.equals("StreetParking")) {
-                            ReverseGeocodeRequest2 req = new ReverseGeocodeRequest2(
-                                    new GeoCoordinate( data.get(0).location[0],data.get(0).location[1]));
-                            req.execute(new ResultListener<Location>() {
-                                @Override
-                                public void onCompleted(Location location, ErrorCode errorCode) {
-                                    Address address = location.getAddress();
-                                    String parkingAddress = address.getStreet();
-                                    if(address.getHouseNumber() != null && address.getHouseNumber().length() > 0) {
-                                        parkingAddress += ", " + address.getHouseNumber();
-                                    }
+                    List<Entity> parkingLots = new ArrayList<Entity>();
+                    List<Entity> streetParkings = new ArrayList<Entity>();
 
-                                    ParkingRenderer.announceParking(tts, parkingAddress);
-                                    routeData.parkingAddress = parkingAddress;
-                                    showParkingData(parkingAddress);
-                                }
-                            });
+                    for (Entity ent: data) {
+                        if(ent.type.equals(Application.PARKING_LOT_TYPE)) {
+                            parkingLots.add(ent);
+                        }
+                        else{
+                            streetParkings.add(ent);
+                        }
+                    }
+
+                    // parking Lots have to be reordered
+                    // CB providing parking lots do not order by distance
+                    Collections.sort(parkingLots, new Comparator<Entity>() {
+                        @Override
+                        public int compare(Entity lhs, Entity rhs) {
+                            double lhsDistance = (new GeoCoordinate(
+                                    lhs.location[0], lhs.location[1])).distanceTo(routeData.destinationCoordinates);
+                            double rhsDistance = (new GeoCoordinate(
+                                    rhs.location[0], rhs.location[1])).distanceTo(routeData.destinationCoordinates);
+
+                            return Double.compare(lhsDistance, rhsDistance);
+                        }
+                    });
+
+                    boolean parkingReady = false;
+                    int streetIndex = 0; int lotIndex = 0;
+                    Entity targetParking = null;
+                    Entity alternativeParking = null;
+                    String typeUnknown = "";
+                    int spotNumberUnknown = -1;
+
+                    while(!parkingReady) {
+                        Entity streetParking = null;
+                        Entity parkingLot = null;
+
+                        if (streetParkings.size() > streetIndex) {
+                            streetParking = streetParkings.get(streetIndex++);
+                        }
+
+                        if (parkingLots.size() > lotIndex) {
+                            parkingLot = parkingLots.get(lotIndex++);
+                        }
+
+                        double distanceToStreet = Double.MAX_VALUE, distanceToLot = Double.MAX_VALUE;
+
+                        // Only distances are calculated if there are both kind of parkings
+                        if (streetParking != null && parkingLot != null) {
+                            distanceToStreet =  (new GeoCoordinate(streetParking.location[0],
+                                    streetParking.location[1])).distanceTo(routeData.destinationCoordinates);
+                            distanceToLot = (new GeoCoordinate(parkingLot.location[0],
+                                    parkingLot.location[1])).distanceTo(routeData.destinationCoordinates);
+                        }
+                        else if (parkingLot != null) {
+                            distanceToLot = 0;
+                            distanceToStreet = Double.MAX_VALUE;
+                        }
+                        else if (streetParking != null) {
+                            distanceToStreet = 0;
+                            distanceToLot = Double.MAX_VALUE;
+                        }
+
+                        Entity candidate = parkingLot;
+                        int indexCandidate = lotIndex - 1;
+                        if (distanceToStreet < distanceToLot) {
+                            candidate = streetParking;
+                            indexCandidate = streetIndex - 1;
+                        }
+
+                        Integer availableSpotNumber =
+                                (Integer)candidate.attributes.get("availableSpotNumber");
+
+                        if (availableSpotNumber != null) {
+                           if (availableSpotNumber > 1) {
+                               targetParking = candidate;
+                               parkingReady = true;
+                           }
+                            else if (availableSpotNumber == 1) {
+                                alternativeParking = candidate;
+                            }
                         }
                         else {
-                            // First parking is taken unfortunately they are not ordered by distance
-                            String parkingName = (String)data.get(0).attributes.get("name");
-                            ParkingRenderer.announceParking(tts, parkingName);
-                            routeData.parkingAddress = parkingName;
-                            showParkingData(parkingName);
+                            typeUnknown =  candidate.type;
+                            spotNumberUnknown = indexCandidate;
                         }
+                    }
 
-                        routeData.parkingCoordinates = new GeoCoordinate(data.get(0).location[0],
-                                                            data.get(0).location[1]);
 
-                        ParkingRouteCalculator parkingRoute = new ParkingRouteCalculator();
-                        ParkingRouteData prd = new ParkingRouteData();
-                        prd.origin = coord;
-                        prd.parkingDestination = new GeoCoordinate(
-                                data.get(0).location[0],data.get(0).location[1]);
+                    if (targetParking == null) {
+                        if (alternativeParking != null) {
+                            targetParking = alternativeParking;
+                        } else if (spotNumberUnknown != -1) {
+                            if (Application.STREET_PARKING_TYPE.equals(typeUnknown)) {
+                                targetParking = streetParkings.get(spotNumberUnknown);
+                            }
+                            else if (Application.PARKING_LOT_TYPE.equals(typeUnknown)) {
+                                targetParking = parkingLots.get(spotNumberUnknown);
+                            }
+                        }
+                    }
 
-                        parkingRoute.setListener(new RouteCalculationListener() {
+                    if (targetParking == null) {
+                        Log.d(Application.TAG, "No target parking found");
+                        pendingParkingRequest = false;
+                        parkingRadius += 100;
+                        return;
+                    }
+
+                    if (targetParking.type.equals(Application.STREET_PARKING_TYPE)) {
+                        ReverseGeocodeRequest2 req = new ReverseGeocodeRequest2(
+                                new GeoCoordinate(targetParking.location[0], targetParking.location[1]));
+                        req.execute(new ResultListener<Location>() {
                             @Override
-                            public void onRouteReady(Route r) {
-                                MapRoute mr = new MapRoute(r);
-                                mr.setColor(Color.parseColor("#73C2FB"));
-                                map.addMapObject(mr);
-                                navMan.setRoute(r);
-                                mapObjects.add(mr);
+                            public void onCompleted(Location location, ErrorCode errorCode) {
+                                Address address = location.getAddress();
+                                String parkingAddress = address.getStreet();
+                                if (address.getHouseNumber() != null && address.getHouseNumber().length() > 0) {
+                                    parkingAddress += ", " + address.getHouseNumber();
+                                }
+
+                                ParkingRenderer.announceParking(tts, parkingAddress);
+                                routeData.parkingAddress = parkingAddress;
+                                showParkingData(parkingAddress);
                             }
                         });
-                        parkingRoute.execute(prd);
+                    } else {
+                        String parkingName = (String) targetParking.attributes.get("name");
+                        ParkingRenderer.announceParking(tts, parkingName);
+                        routeData.parkingAddress = parkingName;
+                        showParkingData(parkingName);
+                    }
 
-                        parkingFound = true;
-                    }
-                    else {
-                        parkingRadius += 100;
-                    }
+                    routeData.parkingCoordinates = new GeoCoordinate(targetParking.location[0],
+                            targetParking.location[1]);
+
+                    ParkingRouteCalculator parkingRoute = new ParkingRouteCalculator();
+                    ParkingRouteData prd = new ParkingRouteData();
+                    prd.origin = coord;
+                    prd.parkingDestination = routeData.parkingCoordinates;
+
+                    parkingRoute.setListener(new RouteCalculationListener() {
+                        @Override
+                        public void onRouteReady(Route r) {
+                            MapRoute mr = new MapRoute(r);
+                            mr.setColor(Color.parseColor("#73C2FB"));
+                            map.addMapObject(mr);
+                            navMan.setRoute(r);
+                            mapObjects.add(mr);
+                        }
+                    });
+                    parkingRoute.execute(prd);
+
+                    parkingFound = true;
                     pendingParkingRequest = false;
                 }
             });
+
             pendingParkingRequest = true;
-            Log.d("FIWARE-HERE", "Asking parking data in a radius of: " + parkingRadius);
+            Log.d(Application.TAG, "Asking parking data in a radius of: " + parkingRadius);
             retriever.execute(reqData);
         }
         else if (parkingRadius >= Application.MAX_PARKING_DISTANCE) {
@@ -932,6 +1045,10 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
 
     private void handleSmartCity(GeoPosition loc) {
         long currentDistance = navMan.getDestinationDistance();
+
+        if (currentDistance <= 0) {
+            return;
+        }
 
         if(currentDistance <= Application.PARKING_DISTANCE) {
             if(!inParkingMode) {

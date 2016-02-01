@@ -104,12 +104,22 @@ public class ParkingRenderer {
     private static void renderParkingLot(Context ctx, Map map, Entity ent) {
         GeoCoordinate coords = new GeoCoordinate(ent.location[0], ent.location[1]);
 
-        String available =  ent.attributes.get("availableSpotNumber").toString();
-        String total = ent.attributes.get("totalSpotNumber").toString();
+        Integer nAvailable = (Integer)ent.attributes.get("availableSpotNumber");
+
+        String available = "?";
+        if (nAvailable != null) {
+            available = nAvailable.toString();
+        }
+
+        String total = "?";
+                Integer nTotal = (Integer)ent.attributes.get("totalSpotNumber");
+        if(nTotal != null) {
+            total = nTotal.toString();
+        }
+
         MapMarker mapMarker = new MapMarker(coords,
                                             createLabeledIcon(ctx, available , 16, Color.BLACK));
         mapMarker.setOverlayType(MapOverlayType.FOREGROUND_OVERLAY);
-
         map.addMapObject(mapMarker);
 
         //Creating a default circle with 10 meters radius
