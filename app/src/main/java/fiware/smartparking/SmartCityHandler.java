@@ -4,7 +4,9 @@ import android.os.AsyncTask;
 import android.speech.tts.TextToSpeech;
 import android.util.Log;
 
-import com.here.android.mpa.mapping.MapPolygon;
+import org.joda.time.DateTime;
+import org.joda.time.format.DateTimeFormatter;
+import org.joda.time.format.ISODateTimeFormat;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -23,40 +25,73 @@ public class SmartCityHandler extends AsyncTask<SmartCityRequest, Integer, Map<S
 
     protected Map<String,Object> doInBackground(SmartCityRequest... request) {
         SmartCityRequest input = request[0];
-        List<Entity> data = input.data;
+        Map<String, List<Entity>> data = input.data;
 
-        Log.d(Application.TAG, "Smart-City Onroute data found: " + input.data.size());
+        Log.d(Application.TAG, "SmartCity on route data found: " + input.data.size());
 
-        String str = null;
-        List<Entity> parkings = new ArrayList<Entity>();
-        List<Entity> environment = new ArrayList<Entity>();
+        List<Entity> parkings = data.get(Application.PARKING_LOT_TYPE);
+        if (parkings == null) {
+            parkings = new ArrayList<>();
+        }
+
+        List<Entity> streetParkings = data.get(Application.STREET_PARKING_TYPE);
+        if (streetParkings != null) {
+            parkings.addAll(streetParkings);
+        }
+
+        List<Entity> environment = data.get(Application.AMBIENT_OBSERVED_TYPE);
+        List<Entity> weather = data.get(Application.WEATHER_FORECAST_TYPE);
 
         Map<String,Object> output = new HashMap<String, Object>();
-
-        for (Entity ent : data) {
-            // Avoid rendering the same info two times
-           if (input.renderedEntities.get(ent.id) != null) {
-               continue;
-           }
-
-           if (ent.type.equals(Application.AMBIENT_OBSERVED_TYPE)) {
-               environment.add(ent);
-               renderedEntities++;
-           }
-           else if (ent.type.equals(Application.PARKING_LOT_TYPE) ||
-                   ent.type.equals(Application.STREET_PARKING_TYPE)) {
-                parkings.add(ent);
-           }
-           input.renderedEntities.put(ent.id, ent.id);
-        }
 
         ParkingRenderer.render( Application.mainActivity.getApplicationContext(),
                                 input.map, parkings);
 
-        if(environment.size() > 0) {
+        if(environment != null && environment.size() > 0) {
             input.tts.speak("Smart City Data", TextToSpeech.QUEUE_ADD, null, "AnnounceCity");
             for(int j = 0; j < environment.size(); j++) {
-                new CityDataRenderer().renderData(input.map, input.tts, environment.get(j));
+                Entity ent = environment.get(j);
+                if(Application.renderedEntities.get(ent.id) == null) {
+                    new CityDataRenderer().renderData(input.map, input.tts, ent);
+                    Application.renderedEntities.put(ent.id, ent.id);
+                }
+
+            }
+        }
+
+        if (weather != null && weather.size() > 0) {
+            // Here Weather is processed
+            Entity forecast = null;
+
+            //  Obtain current WeatherForecast
+            long accuracy = Long.MAX_VALUE;
+            for(Entity ow: weather) {
+                Map<String, String> valid = (Map<String, String>)ow.attributes.get("valid");
+                if (valid != null) {
+                    String from = valid.get("from");
+                    String to = valid.get("to");
+
+                    DateTimeFormatter parser    = ISODateTimeFormat.dateTimeParser();
+                    DateTime dateFrom = parser.parseDateTime(from);
+                    DateTime dateTo = parser.parseDateTime(to);
+
+                    DateTime now = DateTime.now();
+
+                    if (dateTo.isAfterNow()) {
+                        if (dateFrom.isAfterNow()) {
+                            long aux = dateTo.getMillis() - dateFrom.getMillis();
+                            if (aux < accuracy ) {
+                                accuracy = aux;
+                                forecast = ow;
+                            }
+                        }
+                    }
+                }
+            }
+
+            if (forecast != null) {
+                Log.d("Weather forecast: ", forecast.id);
+                output.put("Forecast", forecast);
             }
         }
 

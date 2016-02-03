@@ -103,7 +103,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
     private MapFragment mapFragment = null;
 
     private ImageButton locationButton, menuButton;
-    private ImageView fiwareImage;
+    private ImageView fiwareImage, councilLogo;
 
     // Oporto downtown
     public static GeoCoordinate DEFAULT_COORDS;
@@ -133,20 +133,18 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
 
     private TextToSpeech tts;
 
-    private java.util.Map<String, String> renderedEntities = new HashMap<String, String>();
-
     private TextView scityData;
 
     private AmbientAreaData ambientAreaData = new AmbientAreaData();
 
     private boolean pendingSmartCityRequest = false;
 
-    private void onCityDataReadyProcess(List<Entity> data, List<String> typesRequested) {
+    private void onCityDataReadyProcess(java.util.Map<String, List<Entity>> data,
+                                        List<String> typesRequested) {
        if (data.size() == 0) {
            pendingSmartCityRequest = false;
 
-           if (typesRequested.size() == 1 &&
-                   typesRequested.get(0).equals(Application.AMBIENT_AREA_TYPE)) {
+           if (typesRequested.indexOf(Application.AMBIENT_AREA_TYPE) != -1) {
                Log.d(Application.TAG, "Ambient Area not found");
                ambientAreaData.id = null;
                ambientAreaData.polygon = null;
@@ -158,10 +156,8 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
            return;
        }
 
-       if (typesRequested.size() == 1 &&
-               typesRequested.get(0).equals(Application.AMBIENT_AREA_TYPE)) {
-
-           Entity ent = data.get(0);
+       if (data.get(Application.AMBIENT_AREA_TYPE) != null) {
+           Entity ent = data.get(Application.AMBIENT_AREA_TYPE).get(0);
            Log.d(Application.TAG, "Ambient Area: " + ent.id);
 
            if (ambientAreaData.id == null || !ent.id.equals(ambientAreaData.id)) {
@@ -176,6 +172,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
                    @Override
                    public void onRendered(String level, MapPolygon polygonView) {
                        pendingSmartCityRequest = false;
+
                        ambientAreaData.view = polygonView;
                        mapObjects.add(polygonView);
                    }
@@ -193,8 +190,6 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
        req.map = map;
        req.data = data;
        req.tts = tts;
-       req.context = "Environment";
-       req.renderedEntities = renderedEntities;
 
        Toast.makeText(getApplicationContext(), "SmartCity data on route",
                Toast.LENGTH_LONG).show();
@@ -440,8 +435,21 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
 
         paramsLogo.leftMargin = 10;
         paramsLogo.topMargin = 45;
-        rl2.addView(fiwareImage,paramsLogo);
+        rl2.addView(fiwareImage, paramsLogo);
         fiwareImage.setVisibility(RelativeLayout.GONE);
+
+        councilLogo = new ImageView(this);
+        councilLogo.setAdjustViewBounds(true);
+        councilLogo.setCropToPadding(false);
+        councilLogo.setScaleType(ImageView.ScaleType.FIT_XY);
+        councilLogo.setBackground(null);
+        councilLogo.setImageDrawable(getResources().getDrawable(R.drawable.porto));
+
+        RelativeLayout.LayoutParams paramsLogoCouncil = new RelativeLayout.LayoutParams(150, 75);
+        paramsLogoCouncil.leftMargin = 10;
+        paramsLogoCouncil.topMargin = 90;
+        rl2.addView(councilLogo, paramsLogoCouncil);
+        councilLogo.setVisibility(RelativeLayout.GONE);
     }
 
     @Override
@@ -831,7 +839,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
             CityDataRetriever retriever = new CityDataRetriever();
             retriever.setListener(new CityDataListener() {
                 @Override
-                public void onCityDataReady(List<Entity> data) {
+                public void onCityDataReady(java.util.Map<String, List<Entity>> data) {
                     if(data.size() == 0) {
                         Log.d(Application.TAG, "No parking data found.");
                         pendingParkingRequest = false;
@@ -840,18 +848,17 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
                     }
 
                     Log.d(Application.TAG, "Parking data available: " + data.size());
-                    ParkingRenderer.render(getApplicationContext(), map, data);
+                    ParkingRenderer.render(getApplicationContext(), map, data.get(Application.RESULT_SET_KEY));
 
-                    List<Entity> parkingLots = new ArrayList<Entity>();
-                    List<Entity> streetParkings = new ArrayList<Entity>();
+                    List<Entity> parkingLots = data.get(Application.PARKING_LOT_TYPE);
+                    List<Entity> streetParkings = data.get(Application.STREET_PARKING_TYPE);
 
-                    for (Entity ent: data) {
-                        if(ent.type.equals(Application.PARKING_LOT_TYPE)) {
-                            parkingLots.add(ent);
-                        }
-                        else{
-                            streetParkings.add(ent);
-                        }
+                    if (parkingLots == null) {
+                        parkingLots = new ArrayList<>();
+                    }
+
+                    if (streetParkings == null) {
+                        streetParkings = new ArrayList<>();
                     }
 
                     // parking Lots have to be reordered
@@ -875,7 +882,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
                     String typeUnknown = "";
                     int spotNumberUnknown = -1;
 
-                    while(!parkingReady) {
+                    while (!parkingReady) {
                         Entity streetParking = null;
                         Entity parkingLot = null;
 
@@ -904,12 +911,20 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
                             distanceToStreet = 0;
                             distanceToLot = Double.MAX_VALUE;
                         }
+                        else {
+                            break;
+                        }
 
                         Entity candidate = parkingLot;
                         int indexCandidate = lotIndex - 1;
                         if (distanceToStreet < distanceToLot) {
                             candidate = streetParking;
                             indexCandidate = streetIndex - 1;
+                        }
+
+                        // Workaround for parkings without attributes
+                        if(candidate.attributes == null) {
+                            candidate.attributes = new HashMap();
                         }
 
                         Integer availableSpotNumber =
@@ -942,14 +957,14 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
                                 targetParking = parkingLots.get(spotNumberUnknown);
                             }
                         }
+                        else {
+                            Log.d(Application.TAG, "No target parking found");
+                            pendingParkingRequest = false;
+                            parkingRadius += 100;
+                            return;
+                        }
                     }
 
-                    if (targetParking == null) {
-                        Log.d(Application.TAG, "No target parking found");
-                        pendingParkingRequest = false;
-                        parkingRadius += 100;
-                        return;
-                    }
 
                     if (targetParking.type.equals(Application.STREET_PARKING_TYPE)) {
                         ReverseGeocodeRequest2 req = new ReverseGeocodeRequest2(
@@ -1117,7 +1132,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
         CityDataRetriever retriever = new CityDataRetriever();
         retriever.setListener(new CityDataListener() {
             @Override
-            public void onCityDataReady(List<Entity> data) {
+            public void onCityDataReady(java.util.Map<String, List<Entity>> data) {
                 onCityDataReadyProcess(data, types);
             }
         });
@@ -1210,17 +1225,19 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
         LinearLayout.LayoutParams layoutParamsInner = new LinearLayout.LayoutParams(
                  0, RelativeLayout.LayoutParams.MATCH_PARENT, 0.90f);
         innerMapLayout.setLayoutParams(layoutParamsInner);
-        // findViewById(R.id.oascDataLayout).setVisibility(RelativeLayout.VISIBLE);
+        findViewById(R.id.oascDataLayout).setVisibility(RelativeLayout.VISIBLE);
 
         popupMenu.getMenu().setGroupVisible(R.id.simulationGroup, true);
         popupMenu.getMenu().setGroupVisible(R.id.initialGroup, false);
 
         fiwareImage.setVisibility(RelativeLayout.VISIBLE);
+        councilLogo.setVisibility(RelativeLayout.VISIBLE);
     }
 
     private void hideNavigationUI() {
         locationButton.setVisibility(RelativeLayout.VISIBLE);
         fiwareImage.setVisibility(RelativeLayout.GONE);
+        councilLogo.setVisibility(RelativeLayout.GONE);
 
         findViewById(R.id.nextRoadLayout).setVisibility(RelativeLayout.GONE);
         findViewById(R.id.navigationLayout).setVisibility(RelativeLayout.GONE);
@@ -1290,7 +1307,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
         inParkingMode = false;
         parkingFound = false;
 
-        renderedEntities.clear();
+        Application.renderedEntities.clear();
 
         showNavigationUI();
 
@@ -1329,8 +1346,8 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
         navMan.setNaturalGuidanceMode(
                 EnumSet.of(NavigationManager.NaturalGuidanceMode.JUNCTION));
 
-        // We try to obtain the ambient zone, first
-        String[] types = { Application.AMBIENT_AREA_TYPE };
+        // We try to obtain the ambient zone and weather, first
+        String[] types = { Application.AMBIENT_AREA_TYPE, Application.WEATHER_FORECAST_TYPE };
         previousDistanceArea = routeData.route.getLength();
         executeDataRequest(Arrays.asList(types),
                 Application.AMBIENT_AREA_RADIUS, new GeoPosition(route.getStart()));

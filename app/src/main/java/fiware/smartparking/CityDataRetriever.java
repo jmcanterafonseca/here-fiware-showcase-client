@@ -13,6 +13,7 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -26,16 +27,17 @@ import org.json.JSONObject;
  *
  *
  */
-public class CityDataRetriever extends AsyncTask<CityDataRequest, Integer, List<Entity>> {
+public class CityDataRetriever extends AsyncTask<CityDataRequest, Integer, Map<String,List<Entity>> > {
     private CityDataListener listener;
 
     private static String SERVICE_URL = "http://130.206.83.68:7007/v2/entities";
 
-    protected List<Entity> doInBackground(CityDataRequest... request) {
+    protected Map<String,List<Entity>> doInBackground(CityDataRequest... request) {
         String urlString = createRequestURL(request[0]);
 
         StringBuffer output = new StringBuffer("");
-        List<Entity> out = new ArrayList<Entity>();
+        Map<String, List<Entity>> out = new HashMap<>();
+        List<Entity> resultSet = new ArrayList<>();
 
         /*
         Entity ent = new Entity();
@@ -78,26 +80,40 @@ public class CityDataRetriever extends AsyncTask<CityDataRequest, Integer, List<
                 ent.type = obj.getString("type");
                 ent.attributes = new HashMap<String, Object>();
 
-                JSONObject location;
+                JSONObject location  = null;
                 try {
                     location = obj.getJSONObject("centroid");
                 }
                 catch(JSONException jse) {
-                    location = obj.getJSONObject("location");
+                    try {
+                        location = obj.getJSONObject("location");
+                    }
+                    catch(JSONException jse2) { }
                 }
 
-                String locationValue = location.getString("value");
-                String[] coordinates = locationValue.split(",");
+                // There could be entities (namely weather entities) without location
+                if (location != null) {
+                    String locationValue = location.getString("value");
+                    String[] coordinates = locationValue.split(",");
 
-                ent.location = new double[]{ Double.parseDouble(coordinates[0]),
-                                                            Double.parseDouble(coordinates[1]) };
+                    ent.location = new double[]{Double.parseDouble(coordinates[0]),
+                            Double.parseDouble(coordinates[1])};
+                }
 
                 fillAttributes(obj, ent.type, ent.attributes);
-                out.add(ent);
+
+                if(out.get(ent.type) == null) {
+                    out.put(ent.type, new ArrayList<Entity>());
+                }
+                out.get(ent.type).add(ent);
+
+                resultSet.add(ent);
             }
         } catch (Exception e) {
             Log.e(Application.TAG, "While obtaining data: " + e.toString());
         }
+
+        out.put(Application.RESULT_SET_KEY, resultSet);
 
         return out;
     }
@@ -167,18 +183,36 @@ public class CityDataRetriever extends AsyncTask<CityDataRequest, Integer, List<
         if(type.equals("TrafficEvent")) {
 
         }
-        else if(type.equals("AmbientObserved")) {
+        else if(type.equals(Application.AMBIENT_OBSERVED_TYPE)) {
             fillAmbientObserved(obj,type,attrs);
         }
-        else if(type.equals("ParkingLot") || type.equals("StreetParking")) {
+        else if(type.equals(Application.PARKING_LOT_TYPE) ||
+                type.equals(Application.STREET_PARKING_TYPE)) {
            fillParking(obj, type, attrs);
         }
         else if(type.equals("CityEvent")) {
 
         }
-        else if(type.equals("AmbientArea")) {
+        else if(type.equals(Application.AMBIENT_AREA_TYPE)) {
             fillAmbientArea(obj,type,attrs);
         }
+        else if (type.equals(Application.WEATHER_FORECAST_TYPE)) {
+            fillWeather(obj,type, attrs);
+        }
+    }
+
+    private void fillWeather (JSONObject obj, String type,
+                              Map<String, Object> attrs) throws Exception {
+        getDoubleJSONAttr("temperature", obj, null, attrs);
+        getDoubleJSONAttr("relativeHumidity", obj, null, attrs);
+        getCompoundJSONAttr("dayMinimum", obj, null, attrs);
+        getCompoundJSONAttr("dayMaximum", obj, null, attrs);
+
+        getCompoundJSONAttr("valid", obj, null, attrs);
+
+        getDoubleJSONAttr("windSpeed", obj, null, attrs);
+        getStringJSONAttr("windDirection", obj, null, attrs);
+        getStringJSONAttr("weatherType", obj, null, attrs);
     }
 
     private void fillAmbientArea(JSONObject obj, String type,
@@ -241,9 +275,11 @@ public class CityDataRetriever extends AsyncTask<CityDataRequest, Integer, List<
     }
 
 
-    private void getDoubleJSONAttr(String attr, JSONObject obj, String mappedAttr,
+    private void getDoubleJSONAttr(String attr, JSONObject obj, String mAttr,
                                      Map<String, Object> attrs) {
         Double out = null;
+        String mappedAttr = mAttr != null ? mAttr : attr;
+
         try {
             out = obj.getDouble(attr);
             attrs.put(mappedAttr, out);
@@ -251,9 +287,31 @@ public class CityDataRetriever extends AsyncTask<CityDataRequest, Integer, List<
         catch(JSONException e) { }
     }
 
-    private void getIntegerJSONAttr(String attr, JSONObject obj, String mappedAttr,
+    private void getCompoundJSONAttr(String attr, JSONObject obj, String mAttr,
+                                   Map<String, Object> attrs) {
+
+        String mappedAttr = mAttr != null ? mAttr : attr;
+
+        try {
+            JSONObject data = obj.getJSONObject(attr);
+            Iterator<String> keys = data.keys();
+            Map<String, Object> values = new HashMap<>();
+            while(keys.hasNext()) {
+                String key = keys.next();
+
+                values.put(key, data.get(key));
+            }
+
+            attrs.put(mappedAttr, values);
+        }
+        catch(JSONException e) { }
+    }
+
+    private void getIntegerJSONAttr(String attr, JSONObject obj, String mAttr,
                                     Map<String, Object> attrs) {
         Integer out = null;
+        String mappedAttr = mAttr != null ? mAttr : attr;
+
         try {
             out = obj.getInt(attr);
             attrs.put(mappedAttr, out);
@@ -261,9 +319,11 @@ public class CityDataRetriever extends AsyncTask<CityDataRequest, Integer, List<
         catch(JSONException e) { }
     }
 
-    private void getStringJSONAttr(String attr, JSONObject obj, String mappedAttr,
+    private void getStringJSONAttr(String attr, JSONObject obj, String mAttr,
                                     Map<String, Object> attrs) {
         String out = null;
+        String mappedAttr = mAttr != null ? mAttr : attr;
+
         try {
             out = obj.getString(attr);
             attrs.put(mappedAttr, out);
@@ -276,7 +336,7 @@ public class CityDataRetriever extends AsyncTask<CityDataRequest, Integer, List<
         this.listener = listener;
     }
 
-    protected void onPostExecute(List<Entity> data) {
+    protected void onPostExecute(Map<String, List<Entity>> data) {
         listener.onCityDataReady(data);
     }
 }

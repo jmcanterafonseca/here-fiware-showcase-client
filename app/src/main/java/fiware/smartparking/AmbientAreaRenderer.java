@@ -51,12 +51,12 @@ public class AmbientAreaRenderer implements CityDataListener {
     }
 
     @Override
-    public void onCityDataReady(List<Entity> data) {
+    public void onCityDataReady(java.util.Map<String, List<Entity>> data) {
         // When city data is ready, obtain data from all the sensors
         // and then pass the ball to the AirQualityCalculator
         java.util.Map<String,List<Double>> pollutants = new HashMap<>();
 
-        for (Entity ent: data) {
+        for (Entity ent: data.get(Application.AMBIENT_AREA_TYPE)) {
             if(!ent.type.equals(Application.AMBIENT_OBSERVED_TYPE)) {
                 continue;
             }

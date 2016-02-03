@@ -3,7 +3,9 @@ package fiware.smartparking;
 import com.here.android.mpa.mapping.MapObject;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  *   Global Application object for common context and constants
@@ -20,6 +22,8 @@ public class Application {
     public static int PARKING_DISTANCE = 700;
 
     public static List<MapObject> mapObjects = new ArrayList<MapObject>();
+
+    public static Map<String, String> renderedEntities = new HashMap<>();
 
     public static String TAG = "FIWARE-HERE";
     public static String TRANSFER_RESULT = "Transfer-Result";
@@ -72,4 +76,6 @@ public class Application {
     public static String[] POLLUTION_COLORS = {
       "#3B388E3C", "#3B8BC34A", "#3BFFC107", "#3BFF9800", "#3BFF5722"
     };
+
+    public static String RESULT_SET_KEY = "__Result__";
 }

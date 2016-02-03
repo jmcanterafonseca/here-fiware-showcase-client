@@ -28,6 +28,7 @@ import android.widget.ImageButton;
 import android.widget.Spinner;
 import android.widget.Toast;
 
+import com.here.android.mpa.common.GeoBoundingBox;
 import com.here.android.mpa.common.GeoCoordinate;
 import com.here.android.mpa.routing.RouteManager;
 import com.here.android.mpa.routing.RouteOptions;
@@ -657,8 +658,13 @@ public class RouteActivity implements LocationListener {
                         searchCenter = getCoordForCity(city.getText().toString());
                     }
                 }
-
                 req.setSearchCenter(searchCenter);
+                /*
+                GeoBoundingBox bb = new GeoBoundingBox(
+                        new GeoCoordinate(43.4838, -3.8805), new GeoCoordinate(43.4360, -3.7633));
+                req.setMapViewport(bb);
+                */
+
                 pendingRequest = true;
                 req.execute(new ResultListener<List<String>>() {
                     @Override
