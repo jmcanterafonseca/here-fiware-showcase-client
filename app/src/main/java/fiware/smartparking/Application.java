@@ -28,8 +28,8 @@ public class Application {
     public static String TAG = "FIWARE-HERE";
     public static String TRANSFER_RESULT = "Transfer-Result";
 
-    // We will look for parkings not further than 3km
-    public static int MAX_PARKING_DISTANCE = 3000;
+    // We will look for parkings not further than 2 km
+    public static int MAX_PARKING_DISTANCE = 2000;
 
     // Average radius for Ambient areas
     public static int AMBIENT_AREA_RADIUS = 800;
@@ -44,6 +44,8 @@ public class Application {
     public static String STREET_PARKING_TYPE   = "StreetParking";
     public static String PARKING_LOT_TYPE      = "ParkingLot";
     public static String WEATHER_FORECAST_TYPE = "WeatherForecast";
+
+    public static String PARKING_LOT_ZONE_TYPE = "ParkingLotZone";
 
     /* 14 m/s == 50 kms/h */
     public static int DEFAULT_SPEED = 14;
@@ -78,4 +80,6 @@ public class Application {
     };
 
     public static String RESULT_SET_KEY = "__Result__";
+
+    public static String WEATHER_FORECAST_ENTITY = "Forecast";
 }

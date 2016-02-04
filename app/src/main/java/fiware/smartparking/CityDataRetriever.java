@@ -180,20 +180,21 @@ public class CityDataRetriever extends AsyncTask<CityDataRequest, Integer, Map<S
 
     private void fillAttributes(JSONObject obj, String type,
                                 Map<String, Object> attrs) throws Exception {
-        if(type.equals("TrafficEvent")) {
+        if (type.equals("TrafficEvent")) {
 
         }
-        else if(type.equals(Application.AMBIENT_OBSERVED_TYPE)) {
+        else if (type.equals(Application.AMBIENT_OBSERVED_TYPE)) {
             fillAmbientObserved(obj,type,attrs);
         }
-        else if(type.equals(Application.PARKING_LOT_TYPE) ||
-                type.equals(Application.STREET_PARKING_TYPE)) {
+        else if (type.equals(Application.PARKING_LOT_TYPE) ||
+                type.equals(Application.STREET_PARKING_TYPE) ||
+                type.equals((Application.PARKING_LOT_ZONE_TYPE))) {
            fillParking(obj, type, attrs);
         }
-        else if(type.equals("CityEvent")) {
+        else if (type.equals("CityEvent")) {
 
         }
-        else if(type.equals(Application.AMBIENT_AREA_TYPE)) {
+        else if (type.equals(Application.AMBIENT_AREA_TYPE)) {
             fillAmbientArea(obj,type,attrs);
         }
         else if (type.equals(Application.WEATHER_FORECAST_TYPE)) {

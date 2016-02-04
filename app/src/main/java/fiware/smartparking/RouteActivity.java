@@ -53,7 +53,9 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Created by jmcf on 23/10/15.
+ *  Route Wizard
+ *
+ *
  */
 public class RouteActivity implements LocationListener {
     private static int GEOCODE_SEARCH_AREA = 6000;
@@ -92,7 +94,7 @@ public class RouteActivity implements LocationListener {
             { 40.42028, -3.70578 }
     };
 
-    private static Map<String, double[]> cityCoords = new HashMap<String, double[]>();
+    private static Map<String, double[]> cityCoords = new HashMap<>();
 
     static {
         for(int j = 0; j < CITIES.length; j++) {

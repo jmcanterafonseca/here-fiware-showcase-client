@@ -8,26 +8,19 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Typeface;
 import android.speech.tts.TextToSpeech;
-import android.util.Log;
 
-import com.here.android.mpa.common.GeoBoundingBox;
 import com.here.android.mpa.common.GeoCoordinate;
 import com.here.android.mpa.common.GeoPolygon;
-import com.here.android.mpa.common.GeoPolyline;
-import com.here.android.mpa.common.IconCategory;
+
 import com.here.android.mpa.common.Image;
 import com.here.android.mpa.mapping.Map;
 import com.here.android.mpa.mapping.MapCircle;
-import com.here.android.mpa.mapping.MapContainer;
-import com.here.android.mpa.mapping.MapLabeledMarker;
+
 import com.here.android.mpa.mapping.MapMarker;
-import com.here.android.mpa.mapping.MapObject;
+
 import com.here.android.mpa.mapping.MapOverlayType;
 import com.here.android.mpa.mapping.MapPolygon;
-import com.here.android.mpa.mapping.MapPolyline;
 
-import java.util.ArrayList;
-import java.util.BitSet;
 import java.util.List;
 
 
@@ -62,7 +55,8 @@ public class ParkingRenderer {
                 continue;
             }
 
-            if (parking.type.equals(Application.PARKING_LOT_TYPE)) {
+            if (Application.PARKING_LOT_TYPE.equals(parking.type) ||
+                    Application.PARKING_LOT_ZONE_TYPE.equals(parking.type)) {
                 renderParkingLot(ctx, map, parking);
             } else if (parking.type.equals(Application.STREET_PARKING_TYPE)) {
                 renderStreetParking(ctx, map, parking);

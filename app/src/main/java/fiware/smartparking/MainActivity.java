@@ -140,7 +140,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
 
     private void onCityDataReadyProcess(java.util.Map<String, List<Entity>> data,
                                         List<String> typesRequested) {
-       if (data.size() == 0) {
+       if (data.get(Application.RESULT_SET_KEY).size() == 0) {
            pendingSmartCityRequest = false;
 
            if (typesRequested.indexOf(Application.AMBIENT_AREA_TYPE) != -1) {
@@ -181,8 +181,6 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
                Log.d(Application.TAG, "Ambient Area remains the same: " + ambientAreaData.id);
                pendingSmartCityRequest = false;
            }
-
-           return;
        }
 
        SmartCityRequest req = new SmartCityRequest();
@@ -198,7 +196,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
            @Override
            public void onRendered(Object data, int num) {
                java.util.Map<String,Object> result = (java.util.Map<String,Object>)data;
-               Entity forecast = (Entity)result.get("Forecast");
+               Entity forecast = (Entity)result.get(Application.WEATHER_FORECAST_ENTITY);
                if( forecast != null) {
                    Utilities.updateWeather(forecast.attributes, findViewById(R.id.oascDataLayout));
                }
@@ -447,7 +445,6 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
         councilLogo.setCropToPadding(false);
         councilLogo.setScaleType(ImageView.ScaleType.FIT_XY);
         councilLogo.setBackground(null);
-        councilLogo.setImageDrawable(getResources().getDrawable(R.drawable.porto));
 
         RelativeLayout.LayoutParams paramsLogoCouncil = new RelativeLayout.LayoutParams(150, 75);
         paramsLogoCouncil.leftMargin = 10;
@@ -852,13 +849,18 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
                     }
 
                     Log.d(Application.TAG, "Parking data available: " + data.size());
-                    ParkingRenderer.render(getApplicationContext(), map, data.get(Application.RESULT_SET_KEY));
+                    ParkingRenderer.render(getApplicationContext(), map,
+                            data.get(Application.RESULT_SET_KEY));
 
                     List<Entity> parkingLots = data.get(Application.PARKING_LOT_TYPE);
+                    List<Entity> parkingLotZones = data.get(Application.PARKING_LOT_ZONE_TYPE);
                     List<Entity> streetParkings = data.get(Application.STREET_PARKING_TYPE);
 
                     if (parkingLots == null) {
                         parkingLots = new ArrayList<>();
+                        if (parkingLotZones != null) {
+                            parkingLots.addAll(parkingLotZones);
+                        }
                     }
 
                     if (streetParkings == null) {
@@ -1235,6 +1237,14 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
 
         fiwareImage.setVisibility(RelativeLayout.VISIBLE);
         councilLogo.setVisibility(RelativeLayout.VISIBLE);
+
+        int id = getResources().getIdentifier(routeData.city.toLowerCase(), "drawable", getPackageName());
+        if (id != 0) {
+            councilLogo.setImageDrawable(getDrawable(id));
+        }
+        else {
+            councilLogo.setImageDrawable(null);
+        }
     }
 
     private void hideNavigationUI() {

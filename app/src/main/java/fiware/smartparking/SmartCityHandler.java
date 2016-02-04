@@ -19,9 +19,7 @@ import java.util.Map;
  *
  */
 public class SmartCityHandler extends AsyncTask<SmartCityRequest, Integer, Map<String,Object>> {
-
     private RenderListener listener;
-    private int renderedEntities;
 
     protected Map<String,Object> doInBackground(SmartCityRequest... request) {
         SmartCityRequest input = request[0];
@@ -65,6 +63,8 @@ public class SmartCityHandler extends AsyncTask<SmartCityRequest, Integer, Map<S
 
             //  Obtain current WeatherForecast
             long accuracy = Long.MAX_VALUE;
+            long after = Long.MAX_VALUE;
+            DateTime now = new DateTime();
             for(Entity ow: weather) {
                 Map<String, String> valid = (Map<String, String>)ow.attributes.get("validity");
                 if (valid != null) {
@@ -76,12 +76,12 @@ public class SmartCityHandler extends AsyncTask<SmartCityRequest, Integer, Map<S
                     DateTime dateTo = parser.parseDateTime(to);
 
                     if (dateTo.isAfterNow()) {
-                        if (dateFrom.isAfterNow()) {
-                            long aux = dateTo.getMillis() - dateFrom.getMillis();
-                            if (aux < accuracy) {
-                                accuracy = aux;
-                                forecast = ow;
-                            }
+                        long aux = dateTo.getMillis() - now.getMillis();
+                        long aux2 = dateTo.getMillis() - dateFrom.getMillis();
+                        if (aux2 <= accuracy && aux <= after) {
+                            accuracy = aux2;
+                            after = aux;
+                            forecast = ow;
                         }
                     }
                 }
@@ -89,7 +89,7 @@ public class SmartCityHandler extends AsyncTask<SmartCityRequest, Integer, Map<S
 
             if (forecast != null) {
                 Log.d("Weather forecast: ", forecast.id);
-                output.put("Forecast", forecast);
+                output.put(Application.WEATHER_FORECAST_ENTITY, forecast);
             }
         }
 
@@ -97,7 +97,8 @@ public class SmartCityHandler extends AsyncTask<SmartCityRequest, Integer, Map<S
     }
 
     protected void onPostExecute(Map<String, Object> out) {
-        listener.onRendered(out, renderedEntities);
+        // Rendered entities not used. TODO: Refactoring
+        listener.onRendered(out, -1);
     }
 
     public void setListener(RenderListener list) {
