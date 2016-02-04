@@ -10,4 +10,5 @@
     <color name="parking_color">#770000FF</color>
     <color name="oasc_color">#9FA8DA</color>
     <color name="max_temp_color">#1A237E</color>
+    <color name="blue_title">#3F51B5</color>
 </resources>

@@ -203,12 +203,12 @@ public class CityDataRetriever extends AsyncTask<CityDataRequest, Integer, Map<S
 
     private void fillWeather (JSONObject obj, String type,
                               Map<String, Object> attrs) throws Exception {
-        getDoubleJSONAttr("temperature", obj, null, attrs);
-        getDoubleJSONAttr("relativeHumidity", obj, null, attrs);
-        getCompoundJSONAttr("dayMinimum", obj, null, attrs);
-        getCompoundJSONAttr("dayMaximum", obj, null, attrs);
+        getDoubleJSONAttr(WeatherAttributes.TEMPERATURE, obj, null, attrs);
+        getDoubleJSONAttr(WeatherAttributes.R_HUMIDITY, obj, null, attrs);
+        getCompoundJSONAttr(WeatherAttributes.MAXIMUM, obj, null, attrs);
+        getCompoundJSONAttr(WeatherAttributes.MINIMUM, obj, null, attrs);
 
-        getCompoundJSONAttr("valid", obj, null, attrs);
+        getCompoundJSONAttr(WeatherAttributes.VALIDITY, obj, null, attrs);
 
         getDoubleJSONAttr("windSpeed", obj, null, attrs);
         getStringJSONAttr("windDirection", obj, null, attrs);
@@ -298,8 +298,12 @@ public class CityDataRetriever extends AsyncTask<CityDataRequest, Integer, Map<S
             Map<String, Object> values = new HashMap<>();
             while(keys.hasNext()) {
                 String key = keys.next();
-
-                values.put(key, data.get(key));
+                Object value = data.get(key);
+                if (value instanceof Integer) {
+                    Integer ivalue = (Integer)value;
+                    value = new Double(ivalue.doubleValue());
+                }
+                values.put(key, value);
             }
 
             attrs.put(mappedAttr, values);

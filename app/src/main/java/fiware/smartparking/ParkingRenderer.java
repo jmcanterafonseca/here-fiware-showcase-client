@@ -57,13 +57,18 @@ public class ParkingRenderer {
     }
 
     public static void render(Context ctx, Map map, List<Entity> parkings) {
-        for (int j = 0; j < parkings.size(); j++) {
-            Entity parking = parkings.get(j);
-            if (parking.type.equals("ParkingLot")) {
+        for (Entity parking: parkings) {
+            if(Application.renderedEntities.get(parking.id) != null) {
+                continue;
+            }
+
+            if (parking.type.equals(Application.PARKING_LOT_TYPE)) {
                 renderParkingLot(ctx, map, parking);
-            } else if (parking.type.equals("StreetParking")) {
+            } else if (parking.type.equals(Application.STREET_PARKING_TYPE)) {
                 renderStreetParking(ctx, map, parking);
             }
+
+            Application.renderedEntities.put(parking.id, parking.id);
         }
     }
 

@@ -2,7 +2,6 @@ package fiware.smartparking;
 
 import android.app.ProgressDialog;
 import android.content.Context;
-import android.content.pm.ApplicationInfo;
 import android.content.res.Resources;
 import android.graphics.Color;
 import android.graphics.PointF;
@@ -199,6 +198,10 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
            @Override
            public void onRendered(Object data, int num) {
                java.util.Map<String,Object> result = (java.util.Map<String,Object>)data;
+               Entity forecast = (Entity)result.get("Forecast");
+               if( forecast != null) {
+                   Utilities.updateWeather(forecast.attributes, findViewById(R.id.oascDataLayout));
+               }
                pendingSmartCityRequest = false;
            }
        });
@@ -235,7 +238,8 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
 
 
     /**
-     * Stops navigation manager.
+     *   Stops navigation manager.
+     *
      */
     private void stopNavigationManager() {
         if (navMan == null) {
@@ -1225,7 +1229,6 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
         LinearLayout.LayoutParams layoutParamsInner = new LinearLayout.LayoutParams(
                  0, RelativeLayout.LayoutParams.MATCH_PARENT, 0.90f);
         innerMapLayout.setLayoutParams(layoutParamsInner);
-        findViewById(R.id.oascDataLayout).setVisibility(RelativeLayout.VISIBLE);
 
         popupMenu.getMenu().setGroupVisible(R.id.simulationGroup, true);
         popupMenu.getMenu().setGroupVisible(R.id.initialGroup, false);
@@ -1254,6 +1257,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
                 0, RelativeLayout.LayoutParams.MATCH_PARENT, 1.0f);
         innerMapLayout.setLayoutParams(layoutParamsInner);
         findViewById(R.id.oascDataLayout).setVisibility(RelativeLayout.GONE);
+        findViewById(R.id.forecastedHumidity).setVisibility(RelativeLayout.GONE);
 
         if(popupMenu != null) {
             popupMenu.getMenu().setGroupVisible(R.id.initialGroup, true);

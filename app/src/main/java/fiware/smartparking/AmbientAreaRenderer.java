@@ -56,7 +56,7 @@ public class AmbientAreaRenderer implements CityDataListener {
         // and then pass the ball to the AirQualityCalculator
         java.util.Map<String,List<Double>> pollutants = new HashMap<>();
 
-        for (Entity ent: data.get(Application.AMBIENT_AREA_TYPE)) {
+        for (Entity ent: data.get(Application.RESULT_SET_KEY)) {
             if(!ent.type.equals(Application.AMBIENT_OBSERVED_TYPE)) {
                 continue;
             }
@@ -92,7 +92,7 @@ public class AmbientAreaRenderer implements CityDataListener {
         calculator.setListener(new ResultListener<java.util.Map<String,java.util.Map>>() {
             @Override
             public void onResultReady(java.util.Map<String,java.util.Map> result) {
-                if (result != null) {
+                if (result != null && result.size() > 0) {
                     Utilities.AirQualityData data = Utilities.getAirQualityData(result);
 
                     String aqiLevelName = (String)data.worstIndex.get("name");
@@ -116,6 +116,9 @@ public class AmbientAreaRenderer implements CityDataListener {
                     Application.mapObjects.add(marker);
 
                     listener.onRendered(aqiLevelName, polygon);
+                }
+                else {
+                    Log.w(Application.TAG, "Air quality calculator returned empty object");
                 }
             }
         });

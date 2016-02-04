@@ -20,5 +20,4 @@ public class SmartCityRequest {
     public TextToSpeech tts;
     public GeoCoordinate loc;
     public java.util.Map<String, List<Entity>> data;
-    public String context;
 }

@@ -66,7 +66,7 @@ public class SmartCityHandler extends AsyncTask<SmartCityRequest, Integer, Map<S
             //  Obtain current WeatherForecast
             long accuracy = Long.MAX_VALUE;
             for(Entity ow: weather) {
-                Map<String, String> valid = (Map<String, String>)ow.attributes.get("valid");
+                Map<String, String> valid = (Map<String, String>)ow.attributes.get("validity");
                 if (valid != null) {
                     String from = valid.get("from");
                     String to = valid.get("to");
@@ -75,12 +75,10 @@ public class SmartCityHandler extends AsyncTask<SmartCityRequest, Integer, Map<S
                     DateTime dateFrom = parser.parseDateTime(from);
                     DateTime dateTo = parser.parseDateTime(to);
 
-                    DateTime now = DateTime.now();
-
                     if (dateTo.isAfterNow()) {
                         if (dateFrom.isAfterNow()) {
                             long aux = dateTo.getMillis() - dateFrom.getMillis();
-                            if (aux < accuracy ) {
+                            if (aux < accuracy) {
                                 accuracy = aux;
                                 forecast = ow;
                             }
