@@ -991,6 +991,10 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
                         });
                     } else {
                         String parkingName = (String) targetParking.attributes.get("name");
+                        String parkingDescr = (String) targetParking.attributes.get("description");
+                        if (parkingDescr != null && parkingDescr.length() < 25) {
+                            parkingName = parkingDescr;
+                        }
                         ParkingRenderer.announceParking(tts, parkingName);
                         routeData.parkingAddress = parkingName;
                         showParkingData(parkingName);

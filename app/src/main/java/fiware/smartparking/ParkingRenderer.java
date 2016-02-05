@@ -116,8 +116,10 @@ public class ParkingRenderer {
             total = nTotal.toString();
         }
 
+        String label = available + "/" + total;
+
         MapMarker mapMarker = new MapMarker(coords,
-                                            createLabeledIcon(ctx, available , 16, Color.BLACK));
+                                            createLabeledIcon(ctx, label , 16, Color.BLACK));
         mapMarker.setOverlayType(MapOverlayType.FOREGROUND_OVERLAY);
         map.addMapObject(mapMarker);
 

@@ -605,11 +605,12 @@ public class RouteActivity implements LocationListener {
         return geoCoordinates;
     }
 
-    private class MyTextWatcher implements TextWatcher {
+    private class MyTextWatcher implements TextWatcher, ResultListener<List<String>> {
         private AutoCompleteTextView view;
         private ArrayAdapter<String> adapter;
         // Previous text
-        private CharSequence prevText = "";
+        private String lastKnownInput   = "";
+        private String lastRequestQuery = "";
         private boolean pendingRequest = false;
 
         private void checkRemoveButton() {
@@ -627,6 +628,45 @@ public class RouteActivity implements LocationListener {
 
         }
 
+        private void executeSearch(String query) {
+            pendingRequest = true;
+
+            String scity = "";
+            GeoCoordinate searchCenter = MainActivity.DEFAULT_COORDS;
+            if(view.getTag() != null && view.getTag().equals("originAddress")) {
+                scity = originCity.getText().toString();
+
+            }
+            else {
+                if(view.getTag() != null && view.getTag().equals("destAddress")) {
+                    scity = city.getText().toString();
+                }
+            }
+
+            lastRequestQuery = query;
+
+            searchCenter = getCoordForCity(scity);
+            TextSuggestionRequest req = new TextSuggestionRequest(query + " " + scity);
+            req.setSearchCenter(searchCenter);
+            req.setCollectionSize(10);
+            req.execute(this);
+        }
+
+        @Override
+        public void onCompleted(List<String> strings, ErrorCode errorCode) {
+            if (lastKnownInput.equals(lastRequestQuery)) {
+                adapter = new ArrayAdapter<>(activity,
+                        android.R.layout.simple_dropdown_item_1line, strings);
+                view.setAdapter(adapter);
+                adapter.notifyDataSetChanged();
+                pendingRequest = false;
+            }
+            else {
+                executeSearch(lastKnownInput);
+            }
+        }
+
+
         @Override
         public void onTextChanged(CharSequence s, int start, int before, int count) {
             checkRemoveButton();
@@ -638,56 +678,16 @@ public class RouteActivity implements LocationListener {
                 return;
             }
 
-            // Nothing is done if text refines previous text
-            if(pendingRequest || start == prevText.length() &&
-                    s.length() > 4 && adapter.getCount() > 0) {
-                prevText = new StringBuilder(s);
+            lastKnownInput = s.toString();
+
+            if (pendingRequest) {
                 return;
             }
 
-            // Starting with 4 chars is when we query
-            if(s.length() >= 4 && prevText.length() < 4 ||
-                    (s.length() >=4 && s.toString().indexOf(prevText.toString()) == -1 &&
-                            prevText.toString().indexOf(s.toString()) == -1)) {
-                TextSuggestionRequest req = new TextSuggestionRequest(s.toString());
-
-                GeoCoordinate searchCenter = MainActivity.DEFAULT_COORDS;
-                if(view.getTag() != null && view.getTag().equals("originAddress")) {
-                    searchCenter = getCoordForCity(originCity.getText().toString());
-                }
-                else {
-                    if(view.getTag() != null && view.getTag().equals("destAddress")) {
-                        searchCenter = getCoordForCity(city.getText().toString());
-                    }
-                }
-                req.setSearchCenter(searchCenter);
-                /*
-                GeoBoundingBox bb = new GeoBoundingBox(
-                        new GeoCoordinate(43.4838, -3.8805), new GeoCoordinate(43.4360, -3.7633));
-                req.setMapViewport(bb);
-                */
-
-                pendingRequest = true;
-                req.execute(new ResultListener<List<String>>() {
-                    @Override
-                    public void onCompleted(List<String> strings, ErrorCode errorCode) {
-                        pendingRequest = false;
-                        adapter = new ArrayAdapter<String>(activity,
-                                android.R.layout.simple_dropdown_item_1line, strings);
-                        view.setAdapter(adapter);
-                        adapter.notifyDataSetChanged();
-                    }
-                });
+            // Nothing is done if text refines previous text
+            if(s.length() >= 4) {
+                executeSearch(s.toString());
             }
-            else if(prevText.length() >= 4 && s.length() < 4){
-                adapter = new ArrayAdapter<String>(activity,
-                        android.R.layout.simple_dropdown_item_1line, new ArrayList<String>());
-                view.setAdapter(adapter);
-                view.dismissDropDown();
-                adapter.notifyDataSetChanged();
-            }
-
-            prevText = new StringBuilder(s);
         }
 
         @Override
