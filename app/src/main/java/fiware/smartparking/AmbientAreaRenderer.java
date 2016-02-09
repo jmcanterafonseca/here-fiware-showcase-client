@@ -4,6 +4,8 @@ import android.graphics.Color;
 import android.graphics.PointF;
 import android.speech.tts.TextToSpeech;
 import android.util.Log;
+import android.view.View;
+import android.widget.LinearLayout;
 
 import com.here.android.mpa.common.GeoBoundingBox;
 import com.here.android.mpa.common.GeoCoordinate;
@@ -32,8 +34,9 @@ public class AmbientAreaRenderer implements CityDataListener {
     private Entity ambientArea;
     private GeoPolygon polygon;
     private AmbientAreaRenderListener listener;
+    private View oascView;
 
-    private static java.util.Map<String,String> AREA_COLORS= new HashMap<>();
+    public static java.util.Map<String,String> AREA_COLORS = new HashMap<>();
 
     static {
         int index = 0;
@@ -43,11 +46,12 @@ public class AmbientAreaRenderer implements CityDataListener {
 
     }
 
-    public AmbientAreaRenderer(Map hereMap, TextToSpeech tts, Entity ent) {
+    public AmbientAreaRenderer(Map hereMap, TextToSpeech tts, Entity ent, View v) {
         this.hereMap = hereMap;
         this.ambientArea = ent;
         this.tts = tts;
         this.polygon = (GeoPolygon)ent.attributes.get("polygon");
+        this.oascView = v;
     }
 
     @Override
@@ -77,10 +81,10 @@ public class AmbientAreaRenderer implements CityDataListener {
 
         java.util.Map<String, Double> finalValues = new HashMap<>();
 
-        for(String pollutant : pollutants.keySet()) {
+        for (String pollutant : pollutants.keySet()) {
             List<Double> values = pollutants.get(pollutant);
             double average = 0;
-            for(double value : values) {
+            for (double value : values) {
                 average += value;
             }
             average /= values.size();
@@ -93,6 +97,8 @@ public class AmbientAreaRenderer implements CityDataListener {
             @Override
             public void onResultReady(java.util.Map<String,java.util.Map> result) {
                 if (result != null && result.size() > 0) {
+                    Utilities.updateAirPollution(result, (LinearLayout)oascView.findViewById(R.id.airQualityPollutants));
+
                     Utilities.AirQualityData data = Utilities.getAirQualityData(result);
 
                     String aqiLevelName = (String)data.worstIndex.get("name");

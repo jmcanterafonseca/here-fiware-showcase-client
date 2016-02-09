@@ -1,6 +1,7 @@
 package fiware.smartparking;
 
 /**
+ *
  *   Weather attributes
  *
  */
@@ -15,4 +16,8 @@ public class WeatherAttributes {
 
     public static String WIND_SPEED     = "windSpeed";
     public static String WIND_DIRECTION = "windDirection";
+
+    public static String POP = "precipitationProbability";
+
+    public static String WEATHER_TYPE = "weatherType";
 }

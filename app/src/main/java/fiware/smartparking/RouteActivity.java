@@ -70,7 +70,7 @@ public class RouteActivity implements LocationListener {
     private List<String> optionList1 = new ArrayList<String>();
     private List<String> optionList2 = new ArrayList<String>();
     private static String[] CITIES = new String[] {
-            "Porto",
+            "Oporto",
             "Guadalajara",
             "Valencia",
             "Barcelona",
@@ -646,7 +646,10 @@ public class RouteActivity implements LocationListener {
             lastRequestQuery = query;
 
             searchCenter = getCoordForCity(scity);
-            TextSuggestionRequest req = new TextSuggestionRequest(query + " " + scity);
+            if (query.endsWith(" ")) {
+                query += scity;
+            }
+            TextSuggestionRequest req = new TextSuggestionRequest(query);
             req.setSearchCenter(searchCenter);
             req.setCollectionSize(10);
             req.execute(this);

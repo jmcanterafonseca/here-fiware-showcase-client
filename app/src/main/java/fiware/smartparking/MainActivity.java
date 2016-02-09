@@ -166,7 +166,8 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
                ambientAreaData.id = ent.id;
                ambientAreaData.polygon = (GeoPolygon)ent.attributes.get("polygon");
 
-               AmbientAreaRenderer ambientRenderer = new AmbientAreaRenderer(map, tts, ent);
+               AmbientAreaRenderer ambientRenderer = new AmbientAreaRenderer(map, tts, ent,
+                       findViewById(R.id.oascDataLayout));
                ambientRenderer.render(new AmbientAreaRenderListener() {
                    @Override
                    public void onRendered(String level, MapPolygon polygonView) {
@@ -436,7 +437,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
         RelativeLayout.LayoutParams paramsLogo = new RelativeLayout.LayoutParams(160, 35);
 
         paramsLogo.leftMargin = 10;
-        paramsLogo.topMargin = 45;
+        paramsLogo.topMargin = 65;
         rl2.addView(fiwareImage, paramsLogo);
         fiwareImage.setVisibility(RelativeLayout.GONE);
 
@@ -448,7 +449,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
 
         RelativeLayout.LayoutParams paramsLogoCouncil = new RelativeLayout.LayoutParams(150, 75);
         paramsLogoCouncil.leftMargin = 10;
-        paramsLogoCouncil.topMargin = 90;
+        paramsLogoCouncil.topMargin = 110;
         rl2.addView(councilLogo, paramsLogoCouncil);
         councilLogo.setVisibility(RelativeLayout.GONE);
     }

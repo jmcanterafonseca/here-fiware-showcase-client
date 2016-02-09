@@ -214,6 +214,8 @@ public class CityDataRetriever extends AsyncTask<CityDataRequest, Integer, Map<S
         getDoubleJSONAttr("windSpeed", obj, null, attrs);
         getStringJSONAttr("windDirection", obj, null, attrs);
         getStringJSONAttr("weatherType", obj, null, attrs);
+
+        getDoubleJSONAttr(WeatherAttributes.POP, obj, null, attrs);
     }
 
     private void fillAmbientArea(JSONObject obj, String type,

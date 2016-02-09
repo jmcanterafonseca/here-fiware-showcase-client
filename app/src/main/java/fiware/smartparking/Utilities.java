@@ -1,7 +1,12 @@
 package fiware.smartparking;
 
+import android.graphics.Color;
+import android.graphics.Typeface;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.View;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
@@ -78,7 +83,7 @@ public class Utilities {
 
             if (maxTemp != null) {
                 TextView tv = (TextView)v.findViewById(R.id.maxTemperature);
-                tv.setText(formatDouble(maxTemp));
+                tv.setText(formatDouble(Math.floor(maxTemp)));
             }
 
             Double maxH = (Double)maximumValues.get(WeatherAttributes.R_HUMIDITY);
@@ -97,7 +102,7 @@ public class Utilities {
 
             if (minTemp != null) {
                 TextView tv = (TextView)v.findViewById(R.id.minTemperature);
-                tv.setText(formatDouble(minTemp));
+                tv.setText(formatDouble(Math.floor(minTemp)));
             }
 
             Double minH = (Double)minimumValues.get(WeatherAttributes.R_HUMIDITY);
@@ -133,6 +138,69 @@ public class Utilities {
         if (windDirection != null) {
             TextView tv = (TextView)v.findViewById(R.id.windDirection);
             tv.setText(windDirection);
+        }
+
+        Double pop = (Double)data.get(WeatherAttributes.POP);
+        if (pop != null) {
+            v.findViewById(R.id.forecastedPrecipitation).setVisibility(RelativeLayout.VISIBLE);
+            TextView tv = (TextView)v.findViewById(R.id.pop);
+            tv.setText((long)(pop * 100) + "%");
+        }
+
+        String weatherType = (String)data.get(WeatherAttributes.WEATHER_TYPE);
+        Log.d(Application.TAG, "Weather Type: " + weatherType);
+        String icon = WeatherTypes.getIcon(weatherType);
+        int id = Application.mainActivity.getResources().getIdentifier(icon, "drawable",
+                Application.mainActivity.getPackageName());
+
+        if ( id != 0) {
+            ((ImageView)v.findViewById(R.id.forecastedWeatherType)).setImageResource(id);
+        }
+    }
+
+    public static void updateAirPollution(Map<String, Map> data, LinearLayout parent) {
+        parent.removeAllViews();
+
+        // Now all the views are re-created
+        for (String pollutant: data.keySet()) {
+            LinearLayout container = new LinearLayout(Application.mainActivity);
+
+            container.setOrientation(LinearLayout.HORIZONTAL);
+            container.setLayoutParams(new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.MATCH_PARENT));
+
+            TextView label = new TextView(Application.mainActivity);
+            LinearLayout.LayoutParams labelParams = new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT, 0.25f);
+            labelParams.setMargins(1, 1, 1, 1);
+            label.setLayoutParams(labelParams);
+
+            label.setPadding(1, 1, 1, 1);
+            label.setText(pollutant);
+            label.setTextColor(Application.mainActivity.getResources().getColor(R.color.blue_text_oasc));
+            label.setTypeface(null, Typeface.BOLD);
+
+            container.addView(label);
+
+            TextView value = new TextView(Application.mainActivity);
+            LinearLayout.LayoutParams valueParams = new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT, 0.75f);
+            valueParams.setMargins(1,1,1,1);
+            value.setLayoutParams(valueParams);
+            value.setPadding(3, 3, 3, 3);
+            value.setGravity(Gravity.CENTER_HORIZONTAL);
+
+            container.addView(value);
+
+            Map indexData = data.get(pollutant);
+            value.setText((String) indexData.get("description"));
+            value.setTextColor(Application.mainActivity.getResources().getColor(R.color.white));
+
+            value.setBackgroundColor(Color.parseColor(
+                    AmbientAreaRenderer.AREA_COLORS.get(indexData.get("name"))));
+            value.setTypeface(null, Typeface.BOLD);
+
+            parent.addView(container);
         }
     }
 

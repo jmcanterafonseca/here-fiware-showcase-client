@@ -70,6 +70,10 @@ public class RouteTransfer extends AsyncTask<RouteData, Void, Integer> {
             }
         }
 
+        if(device == null) {
+            return -1;
+        }
+
         Log.d(Application.TAG,"Paired device to connect to: " + device.getName());
 
         try {
