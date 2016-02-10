@@ -1272,7 +1272,8 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
                 0, RelativeLayout.LayoutParams.MATCH_PARENT, 1.0f);
         innerMapLayout.setLayoutParams(layoutParamsInner);
         findViewById(R.id.oascDataLayout).setVisibility(RelativeLayout.GONE);
-        findViewById(R.id.forecastedHumidity).setVisibility(RelativeLayout.GONE);
+        findViewById(R.id.airQualityGroup).setVisibility(RelativeLayout.GONE);
+        ((LinearLayout)findViewById(R.id.airQualityPollutants)).removeAllViews();
 
         if(popupMenu != null) {
             popupMenu.getMenu().setGroupVisible(R.id.initialGroup, true);

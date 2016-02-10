@@ -97,6 +97,7 @@ public class AmbientAreaRenderer implements CityDataListener {
             @Override
             public void onResultReady(java.util.Map<String,java.util.Map> result) {
                 if (result != null && result.size() > 0) {
+                    oascView.findViewById(R.id.airQualityGroup).setVisibility(View.VISIBLE);
                     Utilities.updateAirPollution(result, (LinearLayout)oascView.findViewById(R.id.airQualityPollutants));
 
                     Utilities.AirQualityData data = Utilities.getAirQualityData(result);

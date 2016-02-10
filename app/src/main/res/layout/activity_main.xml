@@ -147,8 +147,8 @@
                             android:background="@color/max_temp_color"
                             android:text=""
                             android:textStyle="bold"
-                            android:layout_marginLeft="3dip"
-                            android:padding="4dip" />
+                            android:layout_marginLeft="2dip"
+                            android:padding="3dip" />
 
                         <TextView
                             android:layout_width="wrap_content"
@@ -158,8 +158,17 @@
                             android:id="@+id/maxTemperature"
                             android:text=""
                             android:textStyle="bold"
-                            android:padding="4dip"
-                            android:layout_marginLeft="3dip"/>
+                            android:padding="3dip"
+                            android:layout_marginLeft="2dip"/>
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:textColor="@color/white"
+                            android:text="ºC"
+                            android:textStyle="bold"
+                            android:padding="1dip"
+                            />
                     </LinearLayout>
 
                     <LinearLayout
@@ -191,15 +200,24 @@
                             android:layout_marginLeft="3dip" />
 
                         <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textColor="@color/white"
+                        android:background="@color/red_maximum"
+                        android:id="@+id/maxHumidity"
+                        android:text=""
+                        android:textStyle="bold"
+                        android:padding="2dip"
+                        android:layout_marginLeft="3dip"/>
+
+                        <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:textColor="@color/white"
-                            android:background="@color/red_maximum"
-                            android:id="@+id/maxHumidity"
-                            android:text=""
+                            android:text="%"
                             android:textStyle="bold"
-                            android:padding="2dip"
-                            android:layout_marginLeft="3dip"/>
+                            android:padding="1dip"
+                           />
 
                     </LinearLayout>
 
@@ -345,8 +363,7 @@
                         android:layout_height="wrap_content"
                         android:orientation="vertical"
                         android:id="@+id/airQualityGroup"
-                        android:visibility="gone"
-                        >
+                        android:visibility="gone">
 
                     <TextView
                         android:layout_width="fill_parent"

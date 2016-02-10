@@ -91,7 +91,7 @@ public class Utilities {
             if (maxH != null) {
                 v.findViewById(R.id.forecastedHumidity).setVisibility(RelativeLayout.VISIBLE);
                 TextView tv = (TextView)v.findViewById(R.id.maxHumidity);
-                tv.setText((long)(maxH * 100) + "%");
+                tv.setText(String.valueOf((long)(maxH * 100)));
             }
         }
 
@@ -102,14 +102,14 @@ public class Utilities {
 
             if (minTemp != null) {
                 TextView tv = (TextView)v.findViewById(R.id.minTemperature);
-                tv.setText(formatDouble(Math.floor(minTemp)));
+                tv.setText(String.valueOf(formatDouble(Math.floor(minTemp))));
             }
 
             Double minH = (Double)minimumValues.get(WeatherAttributes.R_HUMIDITY);
 
             if (minH != null) {
                 TextView tv = (TextView)v.findViewById(R.id.minHumidity);
-                tv.setText((long)(minH * 100) + "%");
+                tv.setText(String.valueOf((long)(minH * 100)));
             }
         }
 
@@ -117,7 +117,7 @@ public class Utilities {
 
         if (temperature != null) {
             TextView tv = (TextView)v.findViewById(R.id.currentTemperature);
-            tv.setText((long)temperature.doubleValue() + "ºC");
+            tv.setText((long) temperature.doubleValue() + "ºC");
         }
 
         Double humidity = (Double)data.get(WeatherAttributes.R_HUMIDITY);

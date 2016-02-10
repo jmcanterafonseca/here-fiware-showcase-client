@@ -544,7 +544,12 @@ public class RouteActivity implements LocationListener {
                         public void onCompleted(GeoCoordinate geoCoordinate, ErrorCode errorCode) {
                             if(errorCode == ErrorCode.NONE) {
                                 routeData.destinationCoordinates = geoCoordinate;
-                                doCalculateRoute(routeData.originCoordinates, routeData.destinationCoordinates);
+                                if (routeData.originCoordinates != null && routeData.destinationCoordinates != null) {
+                                    doCalculateRoute(routeData.originCoordinates, routeData.destinationCoordinates);
+                                }
+                                else {
+                                    notifyErrorToUI();
+                                }
                             }
                             else {
                                 notifyErrorToUI();
