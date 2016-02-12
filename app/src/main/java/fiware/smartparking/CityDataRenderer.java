@@ -33,7 +33,7 @@ public class CityDataRenderer {
             str.append("Temperature: " + temperature);
         }
 
-        Double humidity = (Double)ent.attributes.get("humidity");
+        Double humidity = (Double)ent.attributes.get("relativeHumidity");
         if(humidity != null) {
             msgs.add(new SpeechMessage("Humidity: " + humidity + "%",
                     500, ent.id + "_" + "Humidity"));

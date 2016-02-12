@@ -210,12 +210,12 @@ public class CityDataRetriever extends AsyncTask<CityDataRequest, Integer, Map<S
 
     private void fillGarage (JSONObject obj, String type,
                              Map<String, Object> attrs) throws Exception {
-
+        getStringJSONAttr("name", obj, null, attrs);
     }
 
     private void fillGasStation (JSONObject obj, String type,
                                  Map<String, Object> attrs) throws Exception {
-
+        getStringJSONAttr("name", obj, null, attrs);
     }
 
     private void fillWeather (JSONObject obj, String type,

@@ -755,6 +755,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
     private void showRoute() {
         GeoBoundingBox gbb = routeData.route.getBoundingBox();
 
+        map.setZoomLevel(defaultZoomLevel);
         map.zoomTo(gbb, Map.Animation.LINEAR, Map.MOVE_PRESERVE_ORIENTATION);
 
         GeoCoordinate start = routeData.route.getStart();

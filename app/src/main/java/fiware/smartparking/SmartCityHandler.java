@@ -91,6 +91,9 @@ public class SmartCityHandler extends AsyncTask<SmartCityRequest, Integer, Map<S
             }
         }
 
+        ExtraObjRenderer.render(Application.mainActivity.getApplicationContext(),
+                input.map, data);
+
         return output;
     }
 

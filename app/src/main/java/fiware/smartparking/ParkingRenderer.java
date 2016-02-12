@@ -84,8 +84,8 @@ public class ParkingRenderer {
             streetPolygon.setLineColor(Color.parseColor("#FF0000FF"));
             streetPolygon.setFillColor(Color.parseColor("#770000FF"));
 
-            MapMarker mapMarker = new MapMarker(coords, createLabeledIcon(ctx,
-                   available, 16, Color.BLACK));
+            MapMarker mapMarker = new MapMarker(coords, RenderUtilities.createLabeledIcon(ctx,
+                    available, 16, Color.BLACK,R.mipmap.parking));
             mapMarker.setOverlayType(MapOverlayType.FOREGROUND_OVERLAY);
 
             map.addMapObject(streetPolygon);
@@ -119,7 +119,8 @@ public class ParkingRenderer {
         String label = available + "/" + total;
 
         MapMarker mapMarker = new MapMarker(coords,
-                                            createLabeledIcon(ctx, label , 16, Color.BLACK));
+                                            RenderUtilities.createLabeledIcon(ctx,
+                                                    label, 16, Color.BLACK, R.mipmap.parking));
         mapMarker.setOverlayType(MapOverlayType.FOREGROUND_OVERLAY);
         map.addMapObject(mapMarker);
 
@@ -141,48 +142,5 @@ public class ParkingRenderer {
 
     public static void announceParking(TextToSpeech tts, String name) {
         tts.speak("Heading to parking: " + name, TextToSpeech.QUEUE_ADD, null, "ParkingFound");
-    }
-
-    private static Image createLabeledIcon(Context ctx, String text1, float textSize, int textColor) {
-        try {
-            Bitmap iconBitmap = BitmapFactory.decodeResource(ctx.getResources(), R.mipmap.parking);
-            Paint paint = createPaint(ctx, textSize, textColor);
-            float baseline = -paint.ascent();
-            int textWidth = (int) (paint.measureText(text1) + 0.5f);
-            int textHeight = (int) (baseline + paint.descent() + 0.5f);
-
-            int width = Math.max(iconBitmap.getWidth(), textWidth);
-            int height = iconBitmap.getHeight() + textHeight;
-            Bitmap resBitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
-            Canvas resCanvas = new Canvas(resBitmap);
-            resCanvas.drawBitmap(iconBitmap, calculateLeft(width, iconBitmap.getWidth()), 0, null);
-            resCanvas.drawText(text1, calculateLeft(width, textWidth),
-                    baseline + iconBitmap.getHeight(), paint);
-
-            Image resImage = new Image();
-            resImage.setBitmap(resBitmap);
-            return resImage;
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return null;
-    }
-
-    private static Paint createPaint(Context ctx, float textSize,int textColor){
-        Paint paint = new Paint();
-        paint.setTextSize(dipToPixels(ctx, textSize));
-        paint.setColor(textColor);
-        paint.setTextAlign(Paint.Align.LEFT);
-        paint.setTypeface(Typeface.create(Typeface.DEFAULT, Typeface.BOLD));
-        return paint;
-    }
-
-    private static float dipToPixels(Context ctx, float dip){
-        final float scale = ctx.getResources().getDisplayMetrics().density;
-        return (dip * scale);
-    }
-
-    private static int calculateLeft (int globalWidth, int elementWidth){
-        return (globalWidth - elementWidth)/2;
     }
 }
