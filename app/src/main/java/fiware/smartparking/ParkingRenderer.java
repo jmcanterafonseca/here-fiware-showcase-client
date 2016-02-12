@@ -134,6 +134,7 @@ public class ParkingRenderer {
     }
 
     public static void announceParkingMode(TextToSpeech tts) {
+        tts.playEarcon("parking_mode",TextToSpeech.QUEUE_ADD, null, "ParkingMode");
         tts.speak("We are close to the destination. Parking mode is on",
                 TextToSpeech.QUEUE_ADD, null, "ParkingMode");
     }

@@ -44,6 +44,8 @@ public class Application {
     public static String STREET_PARKING_TYPE   = "StreetParking";
     public static String PARKING_LOT_TYPE      = "ParkingLot";
     public static String WEATHER_FORECAST_TYPE = "WeatherForecast";
+    public static String GAS_STATION_TYPE      = "GasStation";
+    public static String GARAGE_TYPE           = "Garage";
 
     public static String PARKING_LOT_ZONE_TYPE = "ParkingLotZone";
 
@@ -82,4 +84,11 @@ public class Application {
     public static String RESULT_SET_KEY = "__Result__";
 
     public static String WEATHER_FORECAST_ENTITY = "Forecast";
+
+    public static long lastTimeSpeak = -1;
+
+    // 30 seconds
+    public static long SPEAK_INTERVAL = 30 * 1000;
+
+    public static boolean isSpeaking = false;
 }

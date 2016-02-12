@@ -43,6 +43,7 @@ public class WeatherTypes {
             "Intervalos nubosos con lluvia escasa",
             "Nuboso con lluvia",
             "Muy nuboso con lluvia",
+            "Cubierto con lluvia",
             "Muy nuboso",
             "Muy nuboso con lluvia escasa"
     };
@@ -55,6 +56,7 @@ public class WeatherTypes {
             "weather_high_clouds",
             "weather_rain",
             "weather_drizzle",
+            "weather_rain",
             "weather_rain",
             "weather_rain",
             "weather_overcast",

@@ -58,6 +58,8 @@ import com.here.android.mpa.search.Location;
 import com.here.android.mpa.search.ResultListener;
 import com.here.android.mpa.search.ReverseGeocodeRequest2;
 
+import org.joda.time.DateTime;
+
 import java.io.IOException;
 import java.lang.ref.WeakReference;
 import java.text.SimpleDateFormat;
@@ -80,7 +82,7 @@ import java.util.TimeZone;
 public class MainActivity extends AppCompatActivity implements LocationListener {
     private List<MapObject> mapObjects = Application.mapObjects;
 
-    private double currentZoomLevel;
+    private double currentZoomLevel, defaultZoomLevel, routeZoomLevel;
 
     private boolean loopMode = false;
 
@@ -139,7 +141,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
     private boolean pendingSmartCityRequest = false;
 
     private void onCityDataReadyProcess(java.util.Map<String, List<Entity>> data,
-                                        List<String> typesRequested) {
+                                        List<String> typesRequested, GeoPosition pos) {
        if (data.get(Application.RESULT_SET_KEY).size() == 0) {
            pendingSmartCityRequest = false;
 
@@ -167,7 +169,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
                ambientAreaData.polygon = (GeoPolygon)ent.attributes.get("polygon");
 
                AmbientAreaRenderer ambientRenderer = new AmbientAreaRenderer(map, tts, ent,
-                       findViewById(R.id.oascDataLayout));
+                       findViewById(R.id.oascDataLayout), pos.getCoordinate());
                ambientRenderer.render(new AmbientAreaRenderListener() {
                    @Override
                    public void onRendered(String level, MapPolygon polygonView) {
@@ -251,7 +253,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
     }
 
     private void goTo(Map map, GeoCoordinate coordinates, Map.Animation animation) {
-        map.setCenter(coordinates, animation, map.getMaxZoomLevel() - 7, 0, map.getMaxTilt() / 2);
+        map.setCenter(coordinates, animation, defaultZoomLevel, 0, map.getMaxTilt() / 2);
         map.setMapScheme(Map.Scheme.CARNAV_DAY);
 
         lastKnownPosition = coordinates;
@@ -534,6 +536,10 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
                     map = mapFragment.getMap();
                     // Oporto downtown
                     DEFAULT_COORDS = new GeoCoordinate(41.162142, -8.621953);
+
+                    defaultZoomLevel = map.getMaxZoomLevel() - 7.0;
+                    routeZoomLevel = map.getMaxZoomLevel() - 2.5;
+
                     goTo(map, DEFAULT_COORDS, Map.Animation.NONE);
 
                     map.setExtrudedBuildingsVisible(true);
@@ -559,6 +565,10 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
             @Override
             public void onInit(int status) {
                 tts.setLanguage(Locale.ENGLISH);
+                // This is for announcing presence of smart city data
+                tts.addEarcon("smart_city", getPackageName(), R.raw.data2);
+                tts.addEarcon("parking_mode", getPackageName(), R.raw.parking_mode);
+                tts.addEarcon("ambient_area", getPackageName(), R.raw.ambientarea);
             }
         });
 
@@ -571,6 +581,8 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
             @Override
             public void onDone(String utteranceId) {
                 if(utteranceId.equals("Entity_End")) {
+                    Application.isSpeaking = false;
+                    Application.lastTimeSpeak = new DateTime().getMillis();
                     map.setZoomLevel(currentZoomLevel,
                             map.projectToPixel(map.getCenter()).getResult(), Map.Animation.LINEAR);
                 }
@@ -737,6 +749,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
     private void clearMap() {
         map.removeMapObjects(mapObjects);
         mapObjects.clear();
+        map.setZoomLevel(defaultZoomLevel);
     }
 
     private void showRoute() {
@@ -1103,7 +1116,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
                 Log.d(Application.TAG, "Now out of the ambient Area");
 
                 if (!pendingSmartCityRequest) {
-                    String[] types = {Application.AMBIENT_AREA_TYPE};
+                    String[] types = { Application.AMBIENT_AREA_TYPE };
                     executeDataRequest(Arrays.asList(types), Application.AMBIENT_AREA_RADIUS, loc);
                 } else {
                     Log.d(Application.TAG,
@@ -1123,13 +1136,15 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
 
             List<String> types = Arrays.asList(
                     Application.PARKING_TYPE,
-                    Application.AMBIENT_OBSERVED_TYPE
+                    Application.AMBIENT_OBSERVED_TYPE,
+                    Application.GAS_STATION_TYPE,
+                    Application.GARAGE_TYPE
             );
             executeDataRequest(types, Application.DEFAULT_RADIUS, loc);
         }
     }
 
-    private void executeDataRequest(final List<String> types, int radius, GeoPosition loc) {
+    private void executeDataRequest(final List<String> types, int radius, final GeoPosition loc) {
         CityDataRequest reqData = new CityDataRequest();
         reqData.radius = radius;
         reqData.coordinates = new double[]{loc.getCoordinate().getLatitude(),
@@ -1144,7 +1159,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
         retriever.setListener(new CityDataListener() {
             @Override
             public void onCityDataReady(java.util.Map<String, List<Entity>> data) {
-                onCityDataReadyProcess(data, types);
+                onCityDataReadyProcess(data, types, loc);
             }
         });
 
@@ -1164,6 +1179,8 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
         hideNavigationUI();
         // Allow to play the same route again
         popupMenu.getMenu().setGroupVisible(R.id.restartGroup, true);
+
+        ambientAreaData = new AmbientAreaData();
 
         previousDistance = 0;
         if(loopMode) {
@@ -1312,7 +1329,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
     }
 
     public void startSimulation(View v) {
-        map.setCenter(routeData.route.getStart(), Map.Animation.BOW, map.getMaxZoomLevel() - 2.5,
+        map.setCenter(routeData.route.getStart(), Map.Animation.BOW, routeZoomLevel,
                 map.getOrientation(), map.getTilt());
 
         state = "GoingToDeparture";

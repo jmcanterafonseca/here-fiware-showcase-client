@@ -200,6 +200,22 @@ public class CityDataRetriever extends AsyncTask<CityDataRequest, Integer, Map<S
         else if (type.equals(Application.WEATHER_FORECAST_TYPE)) {
             fillWeather(obj,type, attrs);
         }
+        else if (type.equals(Application.GARAGE_TYPE)) {
+            fillGarage(obj, type, attrs);
+        }
+        else if (type.equals(Application.GAS_STATION_TYPE)) {
+            fillGasStation(obj, type, attrs);
+        }
+    }
+
+    private void fillGarage (JSONObject obj, String type,
+                             Map<String, Object> attrs) throws Exception {
+
+    }
+
+    private void fillGasStation (JSONObject obj, String type,
+                                 Map<String, Object> attrs) throws Exception {
+
     }
 
     private void fillWeather (JSONObject obj, String type,

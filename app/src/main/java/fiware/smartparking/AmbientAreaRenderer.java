@@ -35,6 +35,7 @@ public class AmbientAreaRenderer implements CityDataListener {
     private GeoPolygon polygon;
     private AmbientAreaRenderListener listener;
     private View oascView;
+    private GeoCoordinate currentPos;
 
     public static java.util.Map<String,String> AREA_COLORS = new HashMap<>();
 
@@ -46,12 +47,14 @@ public class AmbientAreaRenderer implements CityDataListener {
 
     }
 
-    public AmbientAreaRenderer(Map hereMap, TextToSpeech tts, Entity ent, View v) {
+    public AmbientAreaRenderer(Map hereMap, TextToSpeech tts, Entity ent, View v,
+                               GeoCoordinate currentPos) {
         this.hereMap = hereMap;
         this.ambientArea = ent;
         this.tts = tts;
         this.polygon = (GeoPolygon)ent.attributes.get("polygon");
         this.oascView = v;
+        this.currentPos = currentPos;
     }
 
     @Override
@@ -98,21 +101,29 @@ public class AmbientAreaRenderer implements CityDataListener {
             public void onResultReady(java.util.Map<String,java.util.Map> result) {
                 if (result != null && result.size() > 0) {
                     oascView.findViewById(R.id.airQualityGroup).setVisibility(View.VISIBLE);
-                    Utilities.updateAirPollution(result, (LinearLayout)oascView.findViewById(R.id.airQualityPollutants));
+                    Utilities.updateAirPollution(result,
+                            (LinearLayout)oascView.findViewById(R.id.airQualityPollutants));
 
                     Utilities.AirQualityData data = Utilities.getAirQualityData(result);
 
                     String aqiLevelName = (String)data.worstIndex.get("name");
 
                     MapPolygon polygon = doRender(AREA_COLORS.get(aqiLevelName));
-                    tts.speak("You have entered an area with "
-                                    + data.worstIndex.get("description") + " pollution",
-                            TextToSpeech.QUEUE_ADD, null, "AmbientArea" + '_' + ambientArea.id);
 
-                    tts.playSilentUtterance(100, TextToSpeech.QUEUE_ADD, "Entity_End");
+                    tts.playEarcon("ambient_area", TextToSpeech.QUEUE_ADD, null,
+                            "ambient_area_announcement");
+                    List<SpeechMessage> msgs = new ArrayList<>();
+                    msgs.add(new SpeechMessage("You have entered an area with "
+                            + data.worstIndex.get("description") + " pollution", 100, "Pollution_Area" ));
+                    Utilities.speak(tts, msgs);
 
+                    /*
                     GeoCoordinate coords = new GeoCoordinate(ambientArea.location[0],
-                            ambientArea.location[1]);
+                            ambientArea.location[1]); */
+
+                    PointF f = hereMap.geoToPixel(currentPos);
+                    f.offset(100, 50);
+                    GeoCoordinate coords = hereMap.pixelToGeo(f);
 
                     MapMarker marker = Utilities.buildSensorMarker(coords, "Air Quality",
                             data.asString);
@@ -163,7 +174,7 @@ public class AmbientAreaRenderer implements CityDataListener {
 
         GeoBoundingBox bb = hereMap.getBoundingBox();
         GeoBoundingBox box = polygon.getBoundingBox();
-        if(!bb.contains(box)) {
+        if(false && !bb.contains(box)) {
             Map.PixelResult pr = hereMap.projectToPixel(box.getCenter());
             PointF point = pr.getResult();
             hereMap.setZoomLevel(hereMap.getZoomLevel() - 3,  point, Map.Animation.LINEAR);

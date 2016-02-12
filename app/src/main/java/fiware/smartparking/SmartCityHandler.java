@@ -42,18 +42,16 @@ public class SmartCityHandler extends AsyncTask<SmartCityRequest, Integer, Map<S
 
         Map<String,Object> output = new HashMap<String, Object>();
 
-        ParkingRenderer.render( Application.mainActivity.getApplicationContext(),
+        ParkingRenderer.render(Application.mainActivity.getApplicationContext(),
                                 input.map, parkings);
 
-        if(environment != null && environment.size() > 0) {
-            input.tts.speak("Smart City Data", TextToSpeech.QUEUE_ADD, null, "AnnounceCity");
-            for(int j = 0; j < environment.size(); j++) {
-                Entity ent = environment.get(j);
+        if (environment != null && environment.size() > 0) {
+            input.tts.playEarcon("smart_city", TextToSpeech.QUEUE_ADD, null, "AnnounceCity");
+            for (Entity ent : environment) {
                 if(Application.renderedEntities.get(ent.id) == null) {
                     new CityDataRenderer().renderData(input.map, input.tts, ent);
                     Application.renderedEntities.put(ent.id, ent.id);
                 }
-
             }
         }
 

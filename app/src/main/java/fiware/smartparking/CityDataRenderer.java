@@ -8,6 +8,9 @@ import com.here.android.mpa.common.GeoCoordinate;
 import com.here.android.mpa.mapping.Map;
 import com.here.android.mpa.mapping.MapMarker;
 
+import java.util.ArrayList;
+import java.util.List;
+
 
 /**
  *
@@ -16,28 +19,28 @@ import com.here.android.mpa.mapping.MapMarker;
  */
 public class CityDataRenderer {
     private StringBuffer str;
+    private List<SpeechMessage> msgs = new ArrayList<>();
 
     public String renderData(final Map hereMap, final TextToSpeech tts, final Entity ent) {
         str = new StringBuffer();
         GeoCoordinate coords = new GeoCoordinate(ent.location[0], ent.location[1]);
 
         Double temperature = (Double)ent.attributes.get("temperature");
+
         if(temperature != null) {
-            tts.speak("Temperature: " + temperature, TextToSpeech.QUEUE_ADD, null,
-                    ent.id + "_" + "Temperature");
-            tts.playSilentUtterance(500, TextToSpeech.QUEUE_ADD, ent.id + "_" + "Temperature_");
+            msgs.add(new SpeechMessage("Temperature: " + temperature,
+                    500, ent.id + "_" + "Temperature"));
             str.append("Temperature: " + temperature);
         }
 
         Double humidity = (Double)ent.attributes.get("humidity");
         if(humidity != null) {
-            tts.speak("Humidity: " + humidity + "%", TextToSpeech.QUEUE_ADD, null,
-                    ent.id + "_" + "Humidity");
+            msgs.add(new SpeechMessage("Humidity: " + humidity + "%",
+                    500, ent.id + "_" + "Humidity"));
             if(str.length() > 0) {
                 str.append("\n");
             }
             str.append("Humidity: " + humidity + "%");
-            tts.playSilentUtterance(500, TextToSpeech.QUEUE_ADD, ent.id + "_" + "Humidity_");
         }
 
         if(ent.attributes.get("noiseLevel") != null) {
@@ -45,16 +48,17 @@ public class CityDataRenderer {
             if(str.length() > 0) {
                 str.append("\n");
             }
+            String text = null;
+
             if(noiseLevel > 65) {
-                tts.speak("Noise level is high",
-                        TextToSpeech.QUEUE_ADD, null, ent.id + "_" + "NoiseLevel");
-                str.append("Noise level is high");
+                text = "Noise level is high";
             }
             else {
-                tts.speak("Noise level is normal",
-                        TextToSpeech.QUEUE_ADD, null, ent.id + "_" + "NoiseLevel");
-                str.append("Noise level is normal");
+                text = "Noise level is normal";
             }
+
+            str.append(text);
+            msgs.add(new SpeechMessage(text, -1,  ent.id + "_" + "NoiseLevel"));
         }
 
         AirQualityCalculator calculator = new AirQualityCalculator();
@@ -67,16 +71,16 @@ public class CityDataRenderer {
                     data = Utilities.getAirQualityData(result);
 
                     if (data.worstIndex != null) {
-                        tts.speak("Pollution level is " + data.worstIndex.get("description"),
-                                TextToSpeech.QUEUE_ADD, null, ent.id + "_" + "AirQuality");
-                        tts.playSilentUtterance(500, TextToSpeech.QUEUE_ADD, ent.id + "_"
-                                + "AirQuality_");
+                        msgs.add(new SpeechMessage("Pollution level is " +
+                                data.worstIndex.get("description"),
+                                500, ent.id + "_" + "AirQuality"));
+
                     } else {
                         Log.d(Application.TAG, "Air quality index not found: " + ent.id);
                     }
                 }
 
-                tts.playSilentUtterance(100, TextToSpeech.QUEUE_ADD, "Entity_End");
+                Utilities.speak(tts, msgs);
 
                 if(data.asString != null) {
                     if (str.length() > 0) {
@@ -86,17 +90,19 @@ public class CityDataRenderer {
                 }
 
                 GeoCoordinate coords = new GeoCoordinate(ent.location[0], ent.location[1]);
-                MapMarker marker = Utilities.buildSensorMarker(coords, "Smart City",
+                MapMarker marker = Utilities.buildSensorMarker(coords, "Ambient Data",
                         str.toString());
 
-                hereMap.addMapObject(marker);
-                marker.showInfoBubble();
-                Application.mapObjects.add(marker);
+                if (str.length() > 0) {
+                    hereMap.addMapObject(marker);
+                    marker.showInfoBubble();
+                    Application.mapObjects.add(marker);
+                }
             }
         });
 
         GeoBoundingBox bb = hereMap.getBoundingBox();
-        if(!bb.contains(coords)) {
+        if(false && !bb.contains(coords)) {
             Map.PixelResult pr = hereMap.projectToPixel(coords);
             PointF point = pr.getResult();
             final double currentZoom = hereMap.getZoomLevel();

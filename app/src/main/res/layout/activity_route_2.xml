@@ -96,7 +96,7 @@
                 android:layout_marginLeft="200dp"
                 android:layout_marginRight="200dp"
                 android:onClick="calculateRoute"
-                android:drawableLeft="@drawable/next"/>
+                android:drawableLeft="@drawable/next2"/>
 
 </LinearLayout>
 </RelativeLayout>

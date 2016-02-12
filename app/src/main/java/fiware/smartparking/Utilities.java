@@ -2,6 +2,7 @@ package fiware.smartparking;
 
 import android.graphics.Color;
 import android.graphics.Typeface;
+import android.speech.tts.TextToSpeech;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
@@ -14,10 +15,14 @@ import com.here.android.mpa.common.GeoCoordinate;
 import com.here.android.mpa.common.Image;
 import com.here.android.mpa.mapping.MapMarker;
 
+import org.joda.time.DateTime;
+
 import java.io.IOException;
+import java.util.List;
 import java.util.Map;
 
 /**
+ *
  *  Utilities class
  *
  *
@@ -40,7 +45,7 @@ public class Utilities {
             java.util.Map<String,Object> indexData = result.get(aqiInfo);
 
             int value = (Integer)indexData.get("value");
-            String levelName = (String)indexData.get("name");
+            String levelName = (String)indexData.get("description");
 
             markerOut.append(aqiInfo).append(": ").
                     append(value).append(". ").append(levelName).append("\n");
@@ -51,7 +56,8 @@ public class Utilities {
             }
         }
 
-        out.asString = markerOut.toString();
+        String aux = markerOut.toString();
+        out.asString = markerOut.substring(0, aux.length() - 1);
         out.worstIndex = targetAqi;
 
         return out;
@@ -218,4 +224,34 @@ public class Utilities {
 
         return out;
     }
+
+    // Ensures that speaking is not disturbing user
+    public static void speak(TextToSpeech tts, List<SpeechMessage> text) {
+        if (Application.isSpeaking) {
+            return;
+        }
+
+        long now = new DateTime().getMillis();
+
+        if (now - Application.lastTimeSpeak > Application.SPEAK_INTERVAL) {
+            // Only an entity end will reset isSpeaking variable
+            Application.isSpeaking = true;
+            for (SpeechMessage msg : text) {
+                if (msg.message != null) {
+                    tts.speak(msg.message, TextToSpeech.QUEUE_ADD, null, msg.transactionId);
+                }
+                if (msg.silence > 0) {
+                    tts.playSilentUtterance(msg.silence, TextToSpeech.QUEUE_ADD, msg.transactionId);
+                }
+            }
+
+            // Now is time to mark the end of the transaction
+            tts.playSilentUtterance(100, TextToSpeech.QUEUE_ADD, "Entity_End");
+        }
+
+    }
+
+    // Ensures that no zoom level change is done very frequently
+    // so that user is not disturbed
+
 }

@@ -79,7 +79,8 @@ public class RouteActivity implements LocationListener {
             "Santander",
             "Sevilla",
             "Málaga",
-            "Madrid"
+            "Madrid",
+            "Antwerp"
     };
     private static double[][] CITY_COORDS = new double[][] {
             { 41.14946, -8.61031 },
@@ -91,7 +92,8 @@ public class RouteActivity implements LocationListener {
             { 43.4666, -3.79998 },
             { 38.80889, -7.03888 },
             { 36.71667, -4.41668 },
-            { 40.42028, -3.70578 }
+            { 40.42028, -3.70578 },
+            { 51.2222881,4.3909183 }
     };
 
     private static Map<String, double[]> cityCoords = new HashMap<>();
@@ -663,11 +665,13 @@ public class RouteActivity implements LocationListener {
         @Override
         public void onCompleted(List<String> strings, ErrorCode errorCode) {
             if (lastKnownInput.equals(lastRequestQuery)) {
-                adapter = new ArrayAdapter<>(activity,
-                        android.R.layout.simple_dropdown_item_1line, strings);
-                view.setAdapter(adapter);
-                adapter.notifyDataSetChanged();
-                pendingRequest = false;
+                if (strings != null) {
+                    adapter = new ArrayAdapter<>(activity,
+                            android.R.layout.simple_dropdown_item_1line, strings);
+                    view.setAdapter(adapter);
+                    adapter.notifyDataSetChanged();
+                    pendingRequest = false;
+                }
             }
             else {
                 executeSearch(lastKnownInput);

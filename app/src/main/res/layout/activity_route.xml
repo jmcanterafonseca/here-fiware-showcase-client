@@ -108,7 +108,8 @@
                     android:id="@+id/nextButton1"
                     style="@style/btnStyleShakespeare"
                     android:layout_gravity="center_horizontal"
-                    android:drawableLeft="@drawable/next"/>
+                    android:drawableLeft="@drawable/next2"
+                    />
             </LinearLayout>
 
             <LinearLayout
@@ -125,7 +126,8 @@
                     android:cropToPadding="false"
                     android:scaleType="fitXY"
                     android:id="@+id/currentLocButton"
-                    android:src="@drawable/current_location2" />
+                    android:src="@drawable/current_location2"
+                    style="@style/btnStyleShakespeare"/>
             </LinearLayout>
         </LinearLayout>
     </LinearLayout>
