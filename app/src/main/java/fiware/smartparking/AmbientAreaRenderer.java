@@ -174,7 +174,7 @@ public class AmbientAreaRenderer implements CityDataListener {
 
         GeoBoundingBox bb = hereMap.getBoundingBox();
         GeoBoundingBox box = polygon.getBoundingBox();
-        if(false && !bb.contains(box)) {
+        if (false && !bb.contains(box)) {
             Map.PixelResult pr = hereMap.projectToPixel(box.getCenter());
             PointF point = pr.getResult();
             hereMap.setZoomLevel(hereMap.getZoomLevel() - 3,  point, Map.Animation.LINEAR);

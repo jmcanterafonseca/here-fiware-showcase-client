@@ -102,7 +102,7 @@ public class CityDataRenderer {
         });
 
         GeoBoundingBox bb = hereMap.getBoundingBox();
-        if(false && !bb.contains(coords)) {
+        if (false && !bb.contains(coords)) {
             Map.PixelResult pr = hereMap.projectToPixel(coords);
             PointF point = pr.getResult();
             final double currentZoom = hereMap.getZoomLevel();

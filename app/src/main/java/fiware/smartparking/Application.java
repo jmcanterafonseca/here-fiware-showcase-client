@@ -47,6 +47,8 @@ public class Application {
     public static String GAS_STATION_TYPE      = "GasStation";
     public static String GARAGE_TYPE           = "Garage";
 
+    public static String PARKING_RESTRICTION_TYPE = "ParkingRestriction";
+
     public static String PARKING_LOT_ZONE_TYPE = "ParkingLotZone";
 
     /* 14 m/s == 50 kms/h */

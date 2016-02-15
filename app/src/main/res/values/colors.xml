@@ -13,4 +13,6 @@
     <color name="max_temp_color">#1A237E</color>
     <color name="blue_title">#3F51B5</color>
     <color name="blue_text_oasc">#536DFE</color>
+    <color name="orange_gas_station">#FFFF8F00</color>
+    <color name="violet_garage">#FF7E57C2</color>
 </resources>

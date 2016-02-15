@@ -583,8 +583,10 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
                 if(utteranceId.equals("Entity_End")) {
                     Application.isSpeaking = false;
                     Application.lastTimeSpeak = new DateTime().getMillis();
+                    /*
                     map.setZoomLevel(currentZoomLevel,
                             map.projectToPixel(map.getCenter()).getResult(), Map.Animation.LINEAR);
+                            */
                 }
             }
 

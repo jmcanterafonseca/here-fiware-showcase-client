@@ -57,7 +57,9 @@ public class Utilities {
         }
 
         String aux = markerOut.toString();
-        out.asString = markerOut.substring(0, aux.length() - 1);
+        if (aux.length() > 0) {
+            out.asString = markerOut.substring(0, aux.length() - 1);
+        }
         out.worstIndex = targetAqi;
 
         return out;

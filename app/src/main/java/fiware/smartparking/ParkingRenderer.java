@@ -84,8 +84,11 @@ public class ParkingRenderer {
             streetPolygon.setLineColor(Color.parseColor("#FF0000FF"));
             streetPolygon.setFillColor(Color.parseColor("#770000FF"));
 
+
+            RenderStyle style = new RenderStyle();
+
             MapMarker mapMarker = new MapMarker(coords, RenderUtilities.createLabeledIcon(ctx,
-                    available, 16, Color.BLACK,R.mipmap.parking));
+                    available, style, R.mipmap.parking));
             mapMarker.setOverlayType(MapOverlayType.FOREGROUND_OVERLAY);
 
             map.addMapObject(streetPolygon);
@@ -118,9 +121,11 @@ public class ParkingRenderer {
 
         String label = available + "/" + total;
 
+        RenderStyle style = new RenderStyle();
+
         MapMarker mapMarker = new MapMarker(coords,
                                             RenderUtilities.createLabeledIcon(ctx,
-                                                    label, 16, Color.BLACK, R.mipmap.parking));
+                                                    label, style, R.mipmap.parking));
         mapMarker.setOverlayType(MapOverlayType.FOREGROUND_OVERLAY);
         map.addMapObject(mapMarker);
 
