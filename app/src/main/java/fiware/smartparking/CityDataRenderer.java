@@ -8,7 +8,12 @@ import com.here.android.mpa.common.GeoCoordinate;
 import com.here.android.mpa.mapping.Map;
 import com.here.android.mpa.mapping.MapMarker;
 
+import org.joda.time.DateTime;
+import org.joda.time.format.DateTimeFormatter;
+import org.joda.time.format.ISODateTimeFormat;
+
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 
@@ -22,10 +27,27 @@ public class CityDataRenderer {
     private List<SpeechMessage> msgs = new ArrayList<>();
 
     public String renderData(final Map hereMap, final TextToSpeech tts, final Entity ent) {
-        str = new StringBuffer();
-        GeoCoordinate coords = new GeoCoordinate(ent.location[0], ent.location[1]);
+        String created = (String)ent.attributes.get("created");
+        String sensorType = (String)ent.attributes.get("sensorType");
 
-        Double temperature = (Double)ent.attributes.get("temperature");
+        if (sensorType != null && sensorType.equals("mobile")) {
+            if (created != null) {
+                // Filter out any kind of measurement which is old
+                DateTimeFormatter parser    = ISODateTimeFormat.dateTimeParser();
+                DateTime dateCreated = parser.parseDateTime(created);
+                DateTime now = DateTime.now();
+                if (now.getMillis() - dateCreated.getMillis() > (2 * 60 *  60 * 1000)) {
+                    Log.d(Application.TAG, ent.id +
+                            ": Not rendered as it is a very old measurement");
+                    return "";
+                }
+            }
+        }
+
+        str = new StringBuffer();
+        final GeoCoordinate coords = new GeoCoordinate(ent.location[0], ent.location[1]);
+
+        Double temperature = (Double)ent.attributes.get(WeatherAttributes.TEMPERATURE);
 
         if(temperature != null) {
             msgs.add(new SpeechMessage("Temperature: " + temperature,
@@ -33,7 +55,7 @@ public class CityDataRenderer {
             str.append("Temperature: " + temperature);
         }
 
-        Double humidity = (Double)ent.attributes.get("relativeHumidity");
+        Double humidity = (Double)ent.attributes.get(WeatherAttributes.R_HUMIDITY);
         if(humidity != null) {
             msgs.add(new SpeechMessage("Humidity: " + humidity + "%",
                     500, ent.id + "_" + "Humidity"));
@@ -62,7 +84,16 @@ public class CityDataRenderer {
         }
 
         AirQualityCalculator calculator = new AirQualityCalculator();
-        calculator.execute(ent.attributes);
+        // Filter out only pollutants
+        java.util.Map<String, Double> pollutantData = new HashMap<>();
+        for (String pollutant: Application.POLLUTANTS) {
+            Double value = (Double)ent.attributes.get(pollutant);
+            if (value != null) {
+                pollutantData.put(pollutant, value);
+            }
+        }
+
+        calculator.execute(pollutantData);
         calculator.setListener(new ResultListener<java.util.Map<String, java.util.Map>>() {
             @Override
             public void onResultReady(java.util.Map<String, java.util.Map> result) {
@@ -87,9 +118,10 @@ public class CityDataRenderer {
                         str.append("\n");
                     }
                     str.append(data.asString);
+
+                    // We need to update the air quality data levels
                 }
 
-                GeoCoordinate coords = new GeoCoordinate(ent.location[0], ent.location[1]);
                 MapMarker marker = Utilities.buildSensorMarker(coords, "Ambient Data",
                         str.toString());
 

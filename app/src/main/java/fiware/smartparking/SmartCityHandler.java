@@ -9,6 +9,8 @@ import org.joda.time.format.DateTimeFormatter;
 import org.joda.time.format.ISODateTimeFormat;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -53,6 +55,31 @@ public class SmartCityHandler extends AsyncTask<SmartCityRequest, Integer, Map<S
                     Application.renderedEntities.put(ent.id, ent.id);
                 }
             }
+
+            // Now take the most recent measurement and update the UI
+            Collections.sort(environment, new Comparator<Entity>() {
+                @Override
+                public int compare(Entity lhs, Entity rhs) {
+                    String lcreated = (String) lhs.attributes.get("created");
+                    String rcreated = (String) rhs.attributes.get("created");
+
+                    if (lcreated == null || rcreated == null) {
+                        return 0;
+                    }
+
+                    DateTimeFormatter parser = ISODateTimeFormat.dateTimeParser();
+
+                    DateTime lCreated = parser.parseDateTime(lcreated);
+                    DateTime rCreated = parser.parseDateTime(rcreated);
+
+                    return lCreated.compareTo(rCreated);
+                }
+            });
+
+            Utilities.WeatherObservedData woData = new Utilities.WeatherObservedData();
+            woData.temperature = (Double)environment.get(0).attributes.get(WeatherAttributes.TEMPERATURE);
+            woData.humidity = (Double)environment.get(0).attributes.get(WeatherAttributes.R_HUMIDITY);
+            output.put(Application.WEATHER_OBSERVED_REFRESH, woData);
         }
 
         if (weather != null && weather.size() > 0) {

@@ -2,6 +2,7 @@ package fiware.smartparking;
 
 import android.graphics.Color;
 import android.graphics.PointF;
+import android.os.AsyncTask;
 import android.speech.tts.TextToSpeech;
 import android.util.Log;
 import android.view.View;
@@ -153,7 +154,7 @@ public class AmbientAreaRenderer implements CityDataListener {
         CityDataRetriever retriever = new CityDataRetriever();
         retriever.setListener(this);
 
-        retriever.execute(req);
+        retriever.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, req);
     }
 
     public void render(AmbientAreaRenderListener listener) {

@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.res.Resources;
 import android.graphics.Color;
 import android.graphics.PointF;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
@@ -203,6 +204,12 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
                if( forecast != null) {
                    Utilities.updateWeather(forecast.attributes, findViewById(R.id.oascDataLayout));
                }
+               Utilities.WeatherObservedData weatherObs =
+                       (Utilities.WeatherObservedData)result.get(Application.WEATHER_OBSERVED_REFRESH);
+               if (weatherObs != null) {
+                   Utilities.updateWeatherObserved(weatherObs, findViewById(R.id.oascDataLayout));
+               }
+
                pendingSmartCityRequest = false;
            }
        });
@@ -1097,6 +1104,8 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
                 ParkingRenderer.announceParkingMode(tts);
                 parkingRadius = routeData.parkingDistance;
                 showParkingData("Searching ... ");
+                double zoom = map.getZoomLevel();
+                map.setZoomLevel(zoom + 1.0);
             }
             inParkingMode = true;
         }
@@ -1167,7 +1176,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
         });
 
         pendingSmartCityRequest = true;
-        retriever.execute(reqData);
+        retriever.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, reqData);
     }
 
     private void doTerminateSimulation() {
@@ -1232,7 +1241,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
             };
 
             transferTask.setHandler(handler);
-            transferTask.execute(routeData);
+            transferTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, routeData);
         }
 
         @Override
@@ -1346,6 +1355,9 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
         state = "";
         inParkingMode = false;
         parkingFound = false;
+
+        pendingParkingRequest = false;
+        pendingSmartCityRequest = false;
 
         Application.renderedEntities.clear();
 

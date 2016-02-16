@@ -127,7 +127,7 @@
                     android:scaleType="fitXY"
                     android:id="@+id/currentLocButton"
                     android:src="@drawable/current_location2"
-                    style="@style/btnStyleShakespeare"/>
+                    android:background="@null"/>
             </LinearLayout>
         </LinearLayout>
     </LinearLayout>

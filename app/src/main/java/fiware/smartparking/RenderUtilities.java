@@ -46,7 +46,7 @@ public class RenderUtilities {
         }
 
         // Last token has to be added
-        if (currentToken.length() > 0 && currentToken.length() < minTokenLength) {
+        if (out.size() > 0 && currentToken.length() > 0 && currentToken.length() < minTokenLength) {
             String last = out.get(out.size() - 1);
             last += (" " + currentToken.toString());
             out.set(out.size() - 1, last);

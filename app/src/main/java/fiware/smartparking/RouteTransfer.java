@@ -53,7 +53,13 @@ public class RouteTransfer extends AsyncTask<RouteData, Void, Integer> {
     }
 
     private int transfer(GeoCoordinate originCoords, String originName,
-                         GeoCoordinate destCoords,String destName) {
+                         GeoCoordinate destCoords, String destName) {
+
+        if (originCoords == null || destCoords == null) {
+            Log.d(Application.TAG, "Origin or destination coords are null!!!");
+            return -1;
+        }
+
         BluetoothAdapter adapter = BluetoothAdapter.getDefaultAdapter();
         Set<BluetoothDevice> pairedDevices = adapter.getBondedDevices();
         if(pairedDevices.size() == 0) {

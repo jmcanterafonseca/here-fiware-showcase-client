@@ -33,6 +33,11 @@ public class Utilities {
         public java.util.Map worstIndex;
     }
 
+    public static class WeatherObservedData {
+        public Double temperature = null;
+        public Double humidity = null;
+    }
+
     public static AirQualityData getAirQualityData(java.util.Map<String, java.util.Map> result) {
         AirQualityData out = new AirQualityData();
 
@@ -163,6 +168,18 @@ public class Utilities {
 
         if ( id != 0) {
             ((ImageView)v.findViewById(R.id.forecastedWeatherType)).setImageResource(id);
+        }
+    }
+
+    public static void updateWeatherObserved(WeatherObservedData data, View v) {
+        if (data.temperature != null) {
+            TextView tv = (TextView)v.findViewById(R.id.currentTemperature);
+            tv.setText((long) data.temperature.doubleValue() + "ºC");
+        }
+
+        if (data.humidity != null) {
+            TextView tv = (TextView)v.findViewById(R.id.currentHumidity);
+            tv.setText((long)(data.humidity * 100) + "%");
         }
     }
 

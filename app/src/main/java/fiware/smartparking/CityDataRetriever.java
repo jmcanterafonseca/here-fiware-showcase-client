@@ -122,6 +122,9 @@ public class CityDataRetriever extends AsyncTask<CityDataRequest, Integer, Map<S
         getDoubleJSONAttr("temperature", obj, "temperature", attrs);
         getDoubleJSONAttr("humidity", obj, "humidity", attrs);
         getDoubleJSONAttr("noiseLevel", obj, "noiseLevel", attrs);
+
+        getStringJSONAttr("created", obj, "created", attrs);
+
         try {
             JSONObject pollutants = obj.getJSONObject("pollutants");
             for(String pollutant : Application.POLLUTANTS) {
@@ -164,8 +167,8 @@ public class CityDataRetriever extends AsyncTask<CityDataRequest, Integer, Map<S
                     JSONArray polygon = polygons.getJSONArray(j);
                     List<GeoCoordinate> geoPolygon = new ArrayList<GeoCoordinate>();
                     for (int x = 0; x < polygon.length(); x++) {
-                        float lat = Float.parseFloat(polygon.getJSONArray(x).getString(0));
-                        float lon = Float.parseFloat(polygon.getJSONArray(x).getString(1));
+                        double lat = Double.parseDouble(polygon.getJSONArray(x).getString(0));
+                        double lon = Double.parseDouble(polygon.getJSONArray(x).getString(1));
                         geoPolygon.add(new GeoCoordinate(lat, lon));
                     }
                     location.add(new GeoPolygon(geoPolygon));
@@ -244,8 +247,8 @@ public class CityDataRetriever extends AsyncTask<CityDataRequest, Integer, Map<S
         String[] polygonCoords = coords.split(",");
         List<GeoCoordinate> geoPolygon = new ArrayList<GeoCoordinate>();
         for(int j = 0; j < polygonCoords.length; j+=2) {
-            float lat = Float.parseFloat(polygonCoords[j]);
-            float lon = Float.parseFloat(polygonCoords[j + 1]);
+            double lat = Double.parseDouble(polygonCoords[j]);
+            double lon = Double.parseDouble(polygonCoords[j + 1]);
             geoPolygon.add(new GeoCoordinate(lat, lon));
         }
 

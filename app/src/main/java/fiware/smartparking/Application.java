@@ -86,6 +86,7 @@ public class Application {
     public static String RESULT_SET_KEY = "__Result__";
 
     public static String WEATHER_FORECAST_ENTITY = "Forecast";
+    public static String WEATHER_OBSERVED_REFRESH = "nextWeatherObserved";
 
     public static long lastTimeSpeak = -1;
 
