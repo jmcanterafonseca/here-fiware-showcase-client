@@ -1,6 +1,7 @@
 package fiware.smartparking;
 
 import android.speech.tts.TextToSpeech;
+import android.view.View;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
@@ -20,4 +21,5 @@ public class SmartCityRequest {
     public TextToSpeech tts;
     public GeoCoordinate loc;
     public java.util.Map<String, List<Entity>> data;
+    public View oascView;
 }

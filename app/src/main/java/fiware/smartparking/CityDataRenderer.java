@@ -3,6 +3,9 @@ package fiware.smartparking;
 import android.graphics.PointF;
 import android.speech.tts.TextToSpeech;
 import android.util.Log;
+import android.view.View;
+import android.widget.LinearLayout;
+
 import com.here.android.mpa.common.GeoBoundingBox;
 import com.here.android.mpa.common.GeoCoordinate;
 import com.here.android.mpa.mapping.Map;
@@ -25,8 +28,14 @@ import java.util.List;
 public class CityDataRenderer {
     private StringBuffer str;
     private List<SpeechMessage> msgs = new ArrayList<>();
+    ResultListener<java.util.Map<String, java.util.Map>> listener;
 
-    public String renderData(final Map hereMap, final TextToSpeech tts, final Entity ent) {
+    public void setListener(ResultListener<java.util.Map<String, java.util.Map>> listener) {
+        this.listener = listener;
+    }
+
+    public String renderData(final Map hereMap, final TextToSpeech tts, final Entity ent,
+                             final View oascView) {
         String created = (String)ent.attributes.get("created");
         String sensorType = (String)ent.attributes.get("sensorType");
 
@@ -97,6 +106,10 @@ public class CityDataRenderer {
         calculator.setListener(new ResultListener<java.util.Map<String, java.util.Map>>() {
             @Override
             public void onResultReady(java.util.Map<String, java.util.Map> result) {
+                oascView.findViewById(R.id.airQualityGroup).setVisibility(View.VISIBLE);
+                Utilities.updateAirPollution(result,
+                        (LinearLayout)oascView.findViewById(R.id.airQualityPollutants));
+
                 Utilities.AirQualityData data = null;
                 if (result != null) {
                     data = Utilities.getAirQualityData(result);

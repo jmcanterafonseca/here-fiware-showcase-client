@@ -49,12 +49,6 @@ public class SmartCityHandler extends AsyncTask<SmartCityRequest, Integer, Map<S
 
         if (environment != null && environment.size() > 0) {
             input.tts.playEarcon("smart_city", TextToSpeech.QUEUE_ADD, null, "AnnounceCity");
-            for (Entity ent : environment) {
-                if(Application.renderedEntities.get(ent.id) == null) {
-                    new CityDataRenderer().renderData(input.map, input.tts, ent);
-                    Application.renderedEntities.put(ent.id, ent.id);
-                }
-            }
 
             // Now take the most recent measurement and update the UI
             Collections.sort(environment, new Comparator<Entity>() {
@@ -80,6 +74,13 @@ public class SmartCityHandler extends AsyncTask<SmartCityRequest, Integer, Map<S
             woData.temperature = (Double)environment.get(0).attributes.get(WeatherAttributes.TEMPERATURE);
             woData.humidity = (Double)environment.get(0).attributes.get(WeatherAttributes.R_HUMIDITY);
             output.put(Application.WEATHER_OBSERVED_REFRESH, woData);
+
+            for (Entity ent : environment) {
+                if(Application.renderedEntities.get(ent.id) == null) {
+                    new CityDataRenderer().renderData(input.map, input.tts, ent, input.oascView);
+                    Application.renderedEntities.put(ent.id, ent.id);
+                }
+            }
         }
 
         if (weather != null && weather.size() > 0) {

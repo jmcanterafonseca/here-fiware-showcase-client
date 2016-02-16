@@ -175,9 +175,11 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
                    @Override
                    public void onRendered(String level, MapPolygon polygonView) {
                        pendingSmartCityRequest = false;
+                       if (polygonView != null) {
+                           ambientAreaData.view = polygonView;
+                           mapObjects.add(polygonView);
+                       }
 
-                       ambientAreaData.view = polygonView;
-                       mapObjects.add(polygonView);
                    }
                });
 
@@ -191,6 +193,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
        req.map = map;
        req.data = data;
        req.tts = tts;
+       req.oascView = findViewById(R.id.oascDataLayout);
 
        Toast.makeText(getApplicationContext(), "SmartCity data on route",
                Toast.LENGTH_LONG).show();

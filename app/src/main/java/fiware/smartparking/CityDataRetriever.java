@@ -119,8 +119,8 @@ public class CityDataRetriever extends AsyncTask<CityDataRequest, Integer, Map<S
     }
 
     private void fillAmbientObserved(JSONObject obj, String type, Map<String, Object> attrs) throws Exception {
-        getDoubleJSONAttr("temperature", obj, "temperature", attrs);
-        getDoubleJSONAttr("humidity", obj, "humidity", attrs);
+        getDoubleJSONAttr(WeatherAttributes.TEMPERATURE, obj, WeatherAttributes.TEMPERATURE, attrs);
+        getDoubleJSONAttr(WeatherAttributes.R_HUMIDITY, obj, WeatherAttributes.R_HUMIDITY, attrs);
         getDoubleJSONAttr("noiseLevel", obj, "noiseLevel", attrs);
 
         getStringJSONAttr("created", obj, "created", attrs);

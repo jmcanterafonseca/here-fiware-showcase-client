@@ -165,20 +165,27 @@ public class AmbientAreaRenderer implements CityDataListener {
 
 
     private MapPolygon doRender(String targetColor) {
-        MapPolygon ambientAreaPolygon = new MapPolygon(polygon);
-        ambientAreaPolygon.setLineColor(Color.parseColor(targetColor));
-        ambientAreaPolygon.setFillColor(Color.parseColor(targetColor));
+        MapPolygon ambientAreaPolygon = null;
 
-        ambientAreaPolygon.setOverlayType(MapOverlayType.BACKGROUND_OVERLAY);
+        try {
+            ambientAreaPolygon = new MapPolygon(polygon);
+            ambientAreaPolygon.setLineColor(Color.parseColor(targetColor));
+            ambientAreaPolygon.setFillColor(Color.parseColor(targetColor));
 
-        hereMap.addMapObject(ambientAreaPolygon);
+            ambientAreaPolygon.setOverlayType(MapOverlayType.BACKGROUND_OVERLAY);
 
-        GeoBoundingBox bb = hereMap.getBoundingBox();
-        GeoBoundingBox box = polygon.getBoundingBox();
-        if (false && !bb.contains(box)) {
-            Map.PixelResult pr = hereMap.projectToPixel(box.getCenter());
-            PointF point = pr.getResult();
-            hereMap.setZoomLevel(hereMap.getZoomLevel() - 3,  point, Map.Animation.LINEAR);
+            hereMap.addMapObject(ambientAreaPolygon);
+
+            GeoBoundingBox bb = hereMap.getBoundingBox();
+            GeoBoundingBox box = polygon.getBoundingBox();
+            if (false && !bb.contains(box)) {
+                Map.PixelResult pr = hereMap.projectToPixel(box.getCenter());
+                PointF point = pr.getResult();
+                hereMap.setZoomLevel(hereMap.getZoomLevel() - 3, point, Map.Animation.LINEAR);
+            }
+        }
+        catch(Throwable thr) {
+            Log.e(Application.TAG, "Error while painting ambient area: " + thr);
         }
 
         return ambientAreaPolygon;

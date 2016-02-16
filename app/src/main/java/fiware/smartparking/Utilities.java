@@ -2,6 +2,7 @@ package fiware.smartparking;
 
 import android.graphics.Color;
 import android.graphics.Typeface;
+import android.os.Handler;
 import android.speech.tts.TextToSpeech;
 import android.util.Log;
 import android.view.Gravity;
@@ -137,7 +138,11 @@ public class Utilities {
 
         if (humidity != null) {
             TextView tv = (TextView)v.findViewById(R.id.currentHumidity);
-            tv.setText((long)(humidity * 100) + "%");
+            long calcHumidity = humidity.longValue();
+            if (humidity < 1) {
+                calcHumidity *= 100;
+            }
+            tv.setText(calcHumidity + "%");
         }
 
         Double windSpeed = (Double)data.get(WeatherAttributes.WIND_SPEED);
@@ -175,12 +180,31 @@ public class Utilities {
         if (data.temperature != null) {
             TextView tv = (TextView)v.findViewById(R.id.currentTemperature);
             tv.setText((long) data.temperature.doubleValue() + "ºC");
+            showThunder(v, R.id.thunder_temperature);
         }
 
         if (data.humidity != null) {
             TextView tv = (TextView)v.findViewById(R.id.currentHumidity);
-            tv.setText((long)(data.humidity * 100) + "%");
+            long showedHumidity = data.humidity.longValue();
+            if (data.humidity < 1) {
+                showedHumidity *= 100;
+            }
+            tv.setText(showedHumidity + "%");
+            showThunder(v, R.id.thunder_humidity);
         }
+    }
+
+    public static void showThunder(View v, int id) {
+        final ImageView thunder = (ImageView)v.findViewById(id);
+        thunder.setVisibility(View.VISIBLE);
+        final int interval2 = 3000; // 2 Second
+        Handler handler2 = new Handler();
+        Runnable runnable2 = new Runnable() {
+            public void run() {
+                thunder.setVisibility(View.GONE);
+            }
+        };
+        handler2.postDelayed(runnable2, interval2);
     }
 
     public static void updateAirPollution(Map<String, Map> data, LinearLayout parent) {
