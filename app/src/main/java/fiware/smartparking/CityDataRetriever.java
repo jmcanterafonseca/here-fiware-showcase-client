@@ -49,8 +49,9 @@ public class CityDataRetriever extends AsyncTask<CityDataRequest, Integer, Map<S
         ent.attributes.put("temperature", new Double(22.5));
 
         out.add(ent); */
+        InputStream inputStream = null;
 
-        try{
+        try {
             URL url = new URL(urlString);
 
             Log.d(Application.TAG, "URL: " + urlString);
@@ -61,7 +62,7 @@ public class CityDataRetriever extends AsyncTask<CityDataRequest, Integer, Map<S
             connection.setDoInput(true);
             connection.connect();
 
-            InputStream inputStream = connection.getInputStream();
+            inputStream = connection.getInputStream();
 
             BufferedReader rd = new BufferedReader(new InputStreamReader(inputStream));
             String line;
@@ -111,6 +112,16 @@ public class CityDataRetriever extends AsyncTask<CityDataRequest, Integer, Map<S
             }
         } catch (Exception e) {
             Log.e(Application.TAG, "While obtaining data: " + e.toString());
+        }
+        finally {
+            if (inputStream != null) {
+                try {
+                    inputStream.close();
+                }
+                catch (Throwable thr) {
+                    Log.e(Application.TAG, "Error while closing stream: " + thr);
+                }
+            }
         }
 
         out.put(Application.RESULT_SET_KEY, resultSet);

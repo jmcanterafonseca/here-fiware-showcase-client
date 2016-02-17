@@ -94,4 +94,6 @@ public class Application {
     public static long SPEAK_INTERVAL = 30 * 1000;
 
     public static boolean isSpeaking = false;
+
+    public static String LAST_CITY_VISITED = "Last_City";
 }

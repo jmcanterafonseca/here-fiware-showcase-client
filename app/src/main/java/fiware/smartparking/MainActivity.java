@@ -545,7 +545,11 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
                     // retrieve a reference of the map from the map fragment
                     map = mapFragment.getMap();
                     // Oporto downtown
-                    DEFAULT_COORDS = new GeoCoordinate(41.162142, -8.621953);
+                    String city =
+                            getPreferences(MODE_WORLD_READABLE).getString(
+                                    Application.LAST_CITY_VISITED, "Santander");
+                    double[] coords = RouteActivity.cityCoords.get(city);
+                    DEFAULT_COORDS = new GeoCoordinate(coords[0], coords[1]);
 
                     defaultZoomLevel = map.getMaxZoomLevel() - 7.0;
                     routeZoomLevel = map.getMaxZoomLevel() - 2.5;
@@ -711,6 +715,8 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
 
     public void terminateSimulation() {
         navMan.stop();
+        clearMap();
+
         doTerminateSimulation();
     }
 
@@ -739,6 +745,9 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
     }
 
     public void onRouteReady(RouteData r) {
+        double[] newDefaultCoords = RouteActivity.cityCoords.get(r.city);
+        DEFAULT_COORDS = new GeoCoordinate(newDefaultCoords[0], newDefaultCoords[1]);
+
         ViewGroup rootContainer = (ViewGroup)findViewById(R.id.mainFrame);
         rootContainer.removeViewAt(2);
 

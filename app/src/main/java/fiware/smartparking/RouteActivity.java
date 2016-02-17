@@ -1,9 +1,9 @@
 package fiware.smartparking;
 
 import android.app.Activity;
-import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.graphics.drawable.Drawable;
 import android.os.Handler;
 import android.os.Looper;
@@ -28,13 +28,11 @@ import android.widget.ImageButton;
 import android.widget.Spinner;
 import android.widget.Toast;
 
-import com.here.android.mpa.common.GeoBoundingBox;
 import com.here.android.mpa.common.GeoCoordinate;
 import com.here.android.mpa.routing.RouteManager;
 import com.here.android.mpa.routing.RouteOptions;
 import com.here.android.mpa.routing.RoutePlan;
 import com.here.android.mpa.routing.RouteResult;
-import com.here.android.mpa.search.Address;
 import com.here.android.mpa.search.DiscoveryResult;
 import com.here.android.mpa.search.DiscoveryResultPage;
 import com.here.android.mpa.search.ErrorCode;
@@ -96,7 +94,7 @@ public class RouteActivity implements LocationListener {
             { 51.2222881,4.3909183 }
     };
 
-    private static Map<String, double[]> cityCoords = new HashMap<>();
+    public static Map<String, double[]> cityCoords = new HashMap<>();
 
     static {
         for(int j = 0; j < CITIES.length; j++) {
@@ -143,11 +141,20 @@ public class RouteActivity implements LocationListener {
         setupHeader(1);
         setAutoCompleteHandlerOrigin();
 
+        SharedPreferences prefs = Application.mainActivity.getPreferences(Context.MODE_WORLD_READABLE);
+
+        originCity.setText(prefs.getString(Application.LAST_CITY_VISITED, "Santander"));
+
+
         if(routeData.originCity.length() > 0) {
             originCity.setText(routeData.originCity);
         }
         if(routeData.origin.length() > 0) {
             origin.setText(routeData.origin);
+        }
+
+        if (origin.getText().length() == 0) {
+            origin.requestFocus();
         }
     }
 
@@ -530,6 +537,11 @@ public class RouteActivity implements LocationListener {
     }
 
     private void calculateRoute() {
+        SharedPreferences.Editor edit = Application.mainActivity.
+                                    getPreferences(Activity.MODE_WORLD_WRITEABLE).edit();
+        edit.putString(Application.LAST_CITY_VISITED, routeData.city);
+        edit.commit();
+
         GeoCoordinate originCoordinates = getCoordForCity(routeData.originCity);
         final GeoCoordinate destCoordinates = getCoordForCity(routeData.city);
 
