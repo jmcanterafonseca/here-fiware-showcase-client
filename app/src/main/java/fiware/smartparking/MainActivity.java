@@ -858,10 +858,11 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
                     routeData.destinationCoordinates.getLongitude()
             };
 
-            reqData.types = routeData.parkingCategory;
+            reqData.types = new ArrayList<>(routeData.parkingCategory);
             if(reqData.types.size() == 0) {
                 reqData.types.add(Application.PARKING_TYPE);
             }
+            reqData.types.add(Application.PARKING_RESTRICTION_TYPE);
 
             Log.d(Application.TAG, "Going to retrieve parking data ...");
             CityDataRetriever retriever = new CityDataRetriever();
@@ -1108,7 +1109,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
                 parkingRadius = routeData.parkingDistance;
                 showParkingData("Searching ... ");
                 double zoom = map.getZoomLevel();
-                map.setZoomLevel(zoom + 1.0);
+                map.setZoomLevel(zoom + 0.7);
             }
             inParkingMode = true;
         }

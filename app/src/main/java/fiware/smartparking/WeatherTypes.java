@@ -44,6 +44,7 @@ public class WeatherTypes {
             "Nuboso con lluvia",
             "Muy nuboso con lluvia",
             "Cubierto con lluvia",
+            "Nuboso",
             "Muy nuboso",
             "Muy nuboso con lluvia escasa"
     };
@@ -59,6 +60,7 @@ public class WeatherTypes {
             "weather_rain",
             "weather_rain",
             "weather_rain",
+            "weather_overcast",
             "weather_overcast",
             "weather_drizzle"
     };

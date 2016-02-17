@@ -141,6 +141,12 @@ public class CityDataRetriever extends AsyncTask<CityDataRequest, Integer, Map<S
         }
     }
 
+    private void fillParkingRestriction(JSONObject obj, String type,
+                                        Map<String, Object> attrs) throws Exception {
+        // We obtain location
+        attrs.put("polygon", getPolygon(obj.getString("location")));
+    }
+
     private void fillParking(JSONObject obj, String type,
                              Map<String, Object> attrs) throws Exception {
         getIntegerJSONAttr("availableSpotNumber", obj, "availableSpotNumber", attrs);
@@ -150,7 +156,7 @@ public class CityDataRetriever extends AsyncTask<CityDataRequest, Integer, Map<S
         getStringJSONAttr("name", obj, "name", attrs);
         getStringJSONAttr("description", obj, "description", attrs);
 
-        if(type.equals("StreetParking")) {
+        if (type.equals(Application.STREET_PARKING_TYPE)) {
             boolean isArray = true;
             JSONArray polygons = null;
 
@@ -161,7 +167,7 @@ public class CityDataRetriever extends AsyncTask<CityDataRequest, Integer, Map<S
             catch(JSONException jsoe) {
                 isArray = false;
             }
-            if(isArray == true) {
+            if (isArray == true) {
                 int total = polygons.length();
                 for (int j = 0; j < total; j++) {
                     JSONArray polygon = polygons.getJSONArray(j);
@@ -209,6 +215,9 @@ public class CityDataRetriever extends AsyncTask<CityDataRequest, Integer, Map<S
         else if (type.equals(Application.GAS_STATION_TYPE)) {
             fillGasStation(obj, type, attrs);
         }
+        else if (type.equals(Application.PARKING_RESTRICTION_TYPE)) {
+            fillParkingRestriction(obj, type, attrs);
+        }
     }
 
     private void fillGarage (JSONObject obj, String type,
@@ -245,11 +254,22 @@ public class CityDataRetriever extends AsyncTask<CityDataRequest, Integer, Map<S
 
     private GeoPolygon getPolygon(String coords) {
         String[] polygonCoords = coords.split(",");
+
         List<GeoCoordinate> geoPolygon = new ArrayList<GeoCoordinate>();
         for(int j = 0; j < polygonCoords.length; j+=2) {
             double lat = Double.parseDouble(polygonCoords[j]);
             double lon = Double.parseDouble(polygonCoords[j + 1]);
             geoPolygon.add(new GeoCoordinate(lat, lon));
+        }
+
+        if (geoPolygon.size() > 0) {
+            GeoCoordinate last = geoPolygon.get(geoPolygon.size() - 1);
+            GeoCoordinate first = geoPolygon.get(0);
+
+            if (last.getLatitude() != first.getLatitude() ||
+                    last.getLongitude() != first.getLongitude()) {
+                geoPolygon.add(new GeoCoordinate(first));
+            }
         }
 
         return new GeoPolygon(geoPolygon);

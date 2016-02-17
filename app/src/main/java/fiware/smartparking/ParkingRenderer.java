@@ -8,6 +8,7 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Typeface;
 import android.speech.tts.TextToSpeech;
+import android.util.Log;
 
 import com.here.android.mpa.common.GeoCoordinate;
 import com.here.android.mpa.common.GeoPolygon;
@@ -21,6 +22,7 @@ import com.here.android.mpa.mapping.MapMarker;
 import com.here.android.mpa.mapping.MapOverlayType;
 import com.here.android.mpa.mapping.MapPolygon;
 
+import java.io.IOException;
 import java.util.List;
 
 
@@ -49,6 +51,7 @@ public class ParkingRenderer {
         parkingIcon = loadParkingIcon();
     }
 
+    // Parking can contain as well a parking restriction
     public static void render(Context ctx, Map map, List<Entity> parkings) {
         for (Entity parking: parkings) {
             if(Application.renderedEntities.get(parking.id) != null) {
@@ -60,6 +63,9 @@ public class ParkingRenderer {
                 renderParkingLot(ctx, map, parking);
             } else if (parking.type.equals(Application.STREET_PARKING_TYPE)) {
                 renderStreetParking(ctx, map, parking);
+            }
+            else if (parking.type.equals(Application.PARKING_RESTRICTION_TYPE)) {
+                renderParkingRestriction(ctx, map, parking);
             }
 
             Application.renderedEntities.put(parking.id, parking.id);
@@ -97,6 +103,42 @@ public class ParkingRenderer {
             Application.mapObjects.add(streetPolygon);
             Application.mapObjects.add(mapMarker);
         }
+    }
+
+    private static void renderParkingRestriction(Context ctx, Map map, Entity ent) {
+        GeoCoordinate coords = new GeoCoordinate(ent.location[0], ent.location[1]);
+
+        GeoPolygon polygon = (GeoPolygon)ent.attributes.get("polygon");
+
+        Log.d(Application.TAG, "Polygon:" + polygon.toString());
+
+        for (int j = 0; j < polygon.getNumberOfPoints(); j++) {
+            Log.d(Application.TAG, polygon.getPoint(j).getLatitude() + "," + polygon.getPoint(j).getLongitude());
+        }
+
+        try {
+            MapPolygon streetPolygon = new MapPolygon(polygon);
+            streetPolygon.setLineColor(Color.parseColor("#FF0000FF"));
+            streetPolygon.setFillColor(Color.parseColor("#77FF0000"));
+            map.addMapObject(streetPolygon);
+
+            Application.mapObjects.add(streetPolygon);
+        }
+        catch(Throwable exc) {
+            Log.e(Application.TAG, "Error while rendering parking restriction: " + exc);
+        }
+
+        Image sensorImg = new Image();
+        try {
+            sensorImg.setImageResource(R.drawable.park_restriction);
+        }
+        catch(IOException e) {
+            Log.e(Application.TAG, "Cannot load image: " + e);
+        }
+        MapMarker marker = new MapMarker(coords, sensorImg);
+
+        map.addMapObject(marker);
+        Application.mapObjects.add(marker);
     }
 
     public static void render(Map map, Entity ent) {
