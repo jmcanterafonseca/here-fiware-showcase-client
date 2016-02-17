@@ -36,23 +36,6 @@ public class CityDataRenderer {
 
     public String renderData(final Map hereMap, final TextToSpeech tts, final Entity ent,
                              final View oascView) {
-        String created = (String)ent.attributes.get("created");
-        String sensorType = (String)ent.attributes.get("sensorType");
-
-        if (sensorType != null && sensorType.equals("mobile")) {
-            if (created != null) {
-                // Filter out any kind of measurement which is old
-                DateTimeFormatter parser    = ISODateTimeFormat.dateTimeParser();
-                DateTime dateCreated = parser.parseDateTime(created);
-                DateTime now = DateTime.now();
-                if (now.getMillis() - dateCreated.getMillis() > (2 * 60 *  60 * 1000)) {
-                    Log.d(Application.TAG, ent.id +
-                            ": Not rendered as it is a very old measurement");
-                    return "";
-                }
-            }
-        }
-
         str = new StringBuffer();
         final GeoCoordinate coords = new GeoCoordinate(ent.location[0], ent.location[1]);
 

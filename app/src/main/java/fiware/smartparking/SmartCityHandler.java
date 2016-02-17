@@ -48,37 +48,65 @@ public class SmartCityHandler extends AsyncTask<SmartCityRequest, Integer, Map<S
                                 input.map, parkings);
 
         if (environment != null && environment.size() > 0) {
-            input.tts.playEarcon("smart_city", TextToSpeech.QUEUE_ADD, null, "AnnounceCity");
+            List<Entity> filteredEnv = new ArrayList<>();
+            for(Entity ent : environment) {
+                String created = (String)ent.attributes.get("created");
+                String sensorType = (String)ent.attributes.get("sensorType");
 
-            // Now take the most recent measurement and update the UI
-            Collections.sort(environment, new Comparator<Entity>() {
-                @Override
-                public int compare(Entity lhs, Entity rhs) {
-                    String lcreated = (String) lhs.attributes.get("created");
-                    String rcreated = (String) rhs.attributes.get("created");
-
-                    if (lcreated == null || rcreated == null) {
-                        return 0;
+                if (sensorType != null && sensorType.equals("Mobile")) {
+                    if (created != null) {
+                        // Filter out any kind of measurement which is old
+                        DateTimeFormatter parser    = ISODateTimeFormat.dateTimeParser();
+                        DateTime dateCreated = parser.parseDateTime(created);
+                        DateTime now = DateTime.now();
+                        if (now.getMillis() - dateCreated.getMillis() <= (2 * 60 *  60 * 1000)) {
+                            filteredEnv.add(ent);
+                        }
+                        else {
+                            Log.d(Application.TAG, ent.id +
+                                    ": Not rendered as it is a very old measurement");
+                        }
                     }
-
-                    DateTimeFormatter parser = ISODateTimeFormat.dateTimeParser();
-
-                    DateTime lCreated = parser.parseDateTime(lcreated);
-                    DateTime rCreated = parser.parseDateTime(rcreated);
-
-                    return lCreated.compareTo(rCreated);
                 }
-            });
+                else if (sensorType == null || created == null) {
+                    filteredEnv.add(ent);
+                }
+            }
 
-            Utilities.WeatherObservedData woData = new Utilities.WeatherObservedData();
-            woData.temperature = (Double)environment.get(0).attributes.get(WeatherAttributes.TEMPERATURE);
-            woData.humidity = (Double)environment.get(0).attributes.get(WeatherAttributes.R_HUMIDITY);
-            output.put(Application.WEATHER_OBSERVED_REFRESH, woData);
+            if (filteredEnv.size() > 0) {
+                input.tts.playEarcon("smart_city", TextToSpeech.QUEUE_ADD, null, "AnnounceCity");
 
-            for (Entity ent : environment) {
-                if(Application.renderedEntities.get(ent.id) == null) {
-                    new CityDataRenderer().renderData(input.map, input.tts, ent, input.oascView);
-                    Application.renderedEntities.put(ent.id, ent.id);
+                // Now take the most recent measurement and update the UI
+                Collections.sort(filteredEnv, new Comparator<Entity>() {
+                    @Override
+                    public int compare(Entity lhs, Entity rhs) {
+                        String lcreated = (String) lhs.attributes.get("created");
+                        String rcreated = (String) rhs.attributes.get("created");
+
+                        if (lcreated == null || rcreated == null) {
+                            return 0;
+                        }
+
+                        DateTimeFormatter parser = ISODateTimeFormat.dateTimeParser();
+
+                        DateTime lCreated = parser.parseDateTime(lcreated);
+                        DateTime rCreated = parser.parseDateTime(rcreated);
+
+                        return lCreated.compareTo(rCreated);
+                    }
+                });
+
+                Utilities.WeatherObservedData woData = new Utilities.WeatherObservedData();
+                woData.temperature = (Double) environment.get(0).attributes.get(WeatherAttributes.TEMPERATURE);
+                woData.humidity = (Double) environment.get(0).attributes.get(WeatherAttributes.R_HUMIDITY);
+                output.put(Application.WEATHER_OBSERVED_REFRESH, woData);
+
+                for (int j = environment.size() - 1; j >= 0; j--) {
+                    Entity ent = environment.get(j);
+                    if (Application.renderedEntities.get(ent.id) == null) {
+                        new CityDataRenderer().renderData(input.map, input.tts, ent, input.oascView);
+                        Application.renderedEntities.put(ent.id, ent.id);
+                    }
                 }
             }
         }

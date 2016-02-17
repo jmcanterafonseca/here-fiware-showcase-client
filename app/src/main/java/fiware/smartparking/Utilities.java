@@ -138,11 +138,10 @@ public class Utilities {
 
         if (humidity != null) {
             TextView tv = (TextView)v.findViewById(R.id.currentHumidity);
-            long calcHumidity = humidity.longValue();
             if (humidity < 1) {
-                calcHumidity *= 100;
+                humidity *= 100;
             }
-            tv.setText(calcHumidity + "%");
+            tv.setText((long)humidity.doubleValue() + "%");
         }
 
         Double windSpeed = (Double)data.get(WeatherAttributes.WIND_SPEED);
@@ -185,11 +184,10 @@ public class Utilities {
 
         if (data.humidity != null) {
             TextView tv = (TextView)v.findViewById(R.id.currentHumidity);
-            long showedHumidity = data.humidity.longValue();
             if (data.humidity < 1) {
-                showedHumidity *= 100;
+                data.humidity *= 100;
             }
-            tv.setText(showedHumidity + "%");
+            tv.setText((long)data.humidity.doubleValue() + "%");
             showThunder(v, R.id.thunder_humidity);
         }
     }
@@ -251,6 +249,8 @@ public class Utilities {
 
             parent.addView(container);
         }
+
+        showThunder((View)parent.getParent(), R.id.thunder_air_quality);
     }
 
     public static String formatDouble(Double d) {

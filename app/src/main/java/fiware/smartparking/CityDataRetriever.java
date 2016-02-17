@@ -124,6 +124,7 @@ public class CityDataRetriever extends AsyncTask<CityDataRequest, Integer, Map<S
         getDoubleJSONAttr("noiseLevel", obj, "noiseLevel", attrs);
 
         getStringJSONAttr("created", obj, "created", attrs);
+        getStringJSONAttr("sensorType", obj, "sensorType", attrs);
 
         try {
             JSONObject pollutants = obj.getJSONObject("pollutants");
