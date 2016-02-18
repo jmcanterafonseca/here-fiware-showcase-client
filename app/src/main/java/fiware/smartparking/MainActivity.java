@@ -1206,6 +1206,8 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
         popupMenu.getMenu().setGroupVisible(R.id.restartGroup, true);
 
         ambientAreaData = new AmbientAreaData();
+        Application.lastTimeSpeak = -1;
+        Application.isSpeaking = false;
 
         previousDistance = 0;
         if(loopMode) {
