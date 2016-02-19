@@ -96,13 +96,12 @@ public class SmartCityHandler extends AsyncTask<SmartCityRequest, Integer, Map<S
                     }
                 });
 
-                Utilities.WeatherObservedData woData = new Utilities.WeatherObservedData();
-                woData.temperature = (Double) filteredEnv.get(0).attributes.get(WeatherAttributes.TEMPERATURE);
-                woData.humidity = (Double) filteredEnv.get(0).attributes.get(WeatherAttributes.R_HUMIDITY);
-                output.put(Application.WEATHER_OBSERVED_REFRESH, woData);
-
                 for (Entity ent: filteredEnv) {
                     if (Application.renderedEntities.get(ent.id) == null) {
+                        Utilities.WeatherObservedData woData = new Utilities.WeatherObservedData();
+                        woData.temperature = (Double) ent.attributes.get(WeatherAttributes.TEMPERATURE);
+                        woData.humidity = (Double) ent.attributes.get(WeatherAttributes.R_HUMIDITY);
+                        output.put(Application.WEATHER_OBSERVED_REFRESH, woData);
                         new CityDataRenderer().renderData(input.map, input.tts, ent, input.oascView);
                         Application.renderedEntities.put(ent.id, ent.id);
                         break;

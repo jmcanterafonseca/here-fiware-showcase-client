@@ -123,7 +123,8 @@ public class CityDataRenderer {
 
                 if (str.length() > 0) {
                     hereMap.addMapObject(marker);
-                    marker.showInfoBubble();
+                    Utilities.showBubble(marker);
+
                     Application.mapObjects.add(marker);
                 }
             }

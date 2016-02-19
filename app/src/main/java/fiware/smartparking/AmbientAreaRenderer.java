@@ -130,7 +130,7 @@ public class AmbientAreaRenderer implements CityDataListener {
                             data.asString);
 
                     hereMap.addMapObject(marker);
-                    marker.showInfoBubble();
+                    Utilities.showBubble(marker);
 
                     Application.mapObjects.add(marker);
 

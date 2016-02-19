@@ -90,6 +90,8 @@ public class Application {
 
     public static long lastTimeSpeak = -1;
 
+    public static long lastTimeBubble = -1;
+
     // 30 seconds
     public static long SPEAK_INTERVAL = 30 * 1000;
 

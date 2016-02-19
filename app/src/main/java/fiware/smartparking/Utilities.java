@@ -254,7 +254,7 @@ public class Utilities {
             parent.addView(container);
         }
 
-        showThunder((View)parent.getParent(), R.id.thunder_air_quality);
+        showThunder((View) parent.getParent(), R.id.thunder_air_quality);
     }
 
     public static String formatDouble(Double d) {
@@ -296,6 +296,14 @@ public class Utilities {
             tts.playSilentUtterance(100, TextToSpeech.QUEUE_ADD, "Entity_End");
         }
 
+    }
+
+    public static void showBubble(MapMarker marker) {
+        DateTime now = DateTime.now();
+        if (now.getMillis() - Application.lastTimeBubble > 3 * 1000) {
+            marker.showInfoBubble();
+            Application.lastTimeBubble = now.getMillis();
+        }
     }
 
     // Ensures that no zoom level change is done very frequently

@@ -1208,6 +1208,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
         ambientAreaData = new AmbientAreaData();
         Application.lastTimeSpeak = -1;
         Application.isSpeaking = false;
+        Application.lastTimeBubble = -1;
 
         previousDistance = 0;
         if(loopMode) {
