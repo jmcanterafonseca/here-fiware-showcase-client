@@ -92,20 +92,20 @@ public class SmartCityHandler extends AsyncTask<SmartCityRequest, Integer, Map<S
                         DateTime lCreated = parser.parseDateTime(lcreated);
                         DateTime rCreated = parser.parseDateTime(rcreated);
 
-                        return lCreated.compareTo(rCreated);
+                        return rCreated.compareTo(lCreated);
                     }
                 });
 
                 Utilities.WeatherObservedData woData = new Utilities.WeatherObservedData();
-                woData.temperature = (Double) environment.get(0).attributes.get(WeatherAttributes.TEMPERATURE);
-                woData.humidity = (Double) environment.get(0).attributes.get(WeatherAttributes.R_HUMIDITY);
+                woData.temperature = (Double) filteredEnv.get(0).attributes.get(WeatherAttributes.TEMPERATURE);
+                woData.humidity = (Double) filteredEnv.get(0).attributes.get(WeatherAttributes.R_HUMIDITY);
                 output.put(Application.WEATHER_OBSERVED_REFRESH, woData);
 
-                for (int j = environment.size() - 1; j >= 0; j--) {
-                    Entity ent = environment.get(j);
+                for (Entity ent: filteredEnv) {
                     if (Application.renderedEntities.get(ent.id) == null) {
                         new CityDataRenderer().renderData(input.map, input.tts, ent, input.oascView);
                         Application.renderedEntities.put(ent.id, ent.id);
+                        break;
                     }
                 }
             }
